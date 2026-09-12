@@ -1,0 +1,1528 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Live 3D Home — 16-Week Studio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --chrome:#15171d;
+  --chrome-2:#1e2129;
+  --canvas:#f3f5f8;
+  --panel:#ffffff;
+  --ink:#1a1d24;
+  --muted:#5b6270;
+  --line:#e3e7ee;
+  --c-curriculum:#2f6fed;
+  --c-projects:#ff7a2d;
+  --c-notes:#8b5cf6;
+  --c-screen:#12a394;
+  --c-practice:#ef476f;
+  --radius:16px;
+  --shadow:0 10px 30px rgba(15,17,23,0.10);
+}
+*{box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{margin:0;font-family:'Inter',sans-serif;background:var(--canvas);color:var(--ink);}
+h1,h2,h3,h4,.display{font-family:'Poppins',sans-serif;}
+a{color:inherit;}
+button{font-family:inherit;}
+.app{min-height:100vh;display:flex;flex-direction:column;}
+.topbar{background:var(--chrome);color:#fff;display:flex;align-items:center;gap:22px;padding:0 22px;position:sticky;top:0;z-index:1000;box-shadow:0 2px 14px rgba(0,0,0,.25);}
+.brand{display:flex;align-items:center;gap:10px;padding:14px 0;white-space:nowrap;background:transparent;border:none;cursor:pointer;color:#fff;text-align:left;border-radius:9px;}
+.brand:hover{opacity:.88;}
+.brand:focus-visible{outline:2px solid #fff;outline-offset:3px;}
+.brand .mark{width:36px;height:36px;border-radius:9px;flex-shrink:0;background:linear-gradient(135deg,#2f6fed,#8b5cf6);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:12px;color:#fff;letter-spacing:.5px;box-shadow:0 2px 8px rgba(0,0,0,.25);}
+.brand .name{font-weight:700;font-size:15px;}
+.brand .sub{font-size:11px;color:#9aa2b1;font-weight:500;}
+.tabs{display:flex;gap:2px;overflow-x:auto;scrollbar-width:none;flex:1;}
+.tabs::-webkit-scrollbar{display:none;}
+.tab{background:transparent;border:none;color:#c7cbd4;padding:18px 16px;font-size:13.5px;font-weight:600;cursor:pointer;border-bottom:3px solid transparent;white-space:nowrap;transition:.2s;}
+.tab:hover{color:#fff;background:rgba(255,255,255,.05);}
+.tab.active{color:#fff;border-bottom-color:var(--tab-accent,#2f6fed);}
+.tab[data-tab="home"]{--tab-accent:#ffffff;}
+.tab[data-tab="curriculum"]{--tab-accent:var(--c-curriculum);}
+.tab[data-tab="projects"]{--tab-accent:var(--c-projects);}
+.tab[data-tab="notes"]{--tab-accent:var(--c-notes);}
+.tab[data-tab="screencasts"]{--tab-accent:var(--c-screen);}
+.tab[data-tab="practice"]{--tab-accent:var(--c-practice);}
+.panel-toggle{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14);color:#fff;border-radius:9px;padding:8px 12px;font-size:12px;font-weight:600;cursor:pointer;}
+.panel-toggle:hover{background:rgba(255,255,255,.16);}
+.progress-nav-btn{flex-shrink:0;background:transparent;color:#c7cbd4;border:none;border-radius:9px;padding:9px 12px;font-size:13.5px;font-weight:600;cursor:pointer;white-space:nowrap;}
+.progress-nav-btn:hover{color:#fff;background:rgba(255,255,255,.08);}
+.progress-nav-btn.active{color:#fff;text-decoration:underline;text-underline-offset:4px;}
+.workspace{display:flex;flex:1;max-width:1400px;margin:0 auto;width:100%;}
+.canvas{flex:1;min-width:0;padding:34px 26px 80px;}
+.view{display:none;animation:fade .4s ease;}
+.view.active{display:block;}
+@keyframes fade{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
+.layers-panel{width:280px;flex-shrink:0;background:var(--chrome-2);color:#dfe2ea;border-left:1px solid rgba(255,255,255,.06);position:sticky;top:57px;align-self:flex-start;max-height:calc(100vh - 57px);overflow-y:auto;padding:16px 14px 40px;order:2;}
+.layers-panel.collapsed{display:none;}
+.lp-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px;}
+.lp-head h3{margin:0;font-size:12px;letter-spacing:1.5px;text-transform:uppercase;color:#8f96a6;}
+.lp-total{font-size:22px;font-weight:800;font-family:'Poppins',sans-serif;color:#fff;}
+.lp-total span{font-size:12px;color:#8f96a6;font-weight:500;}
+.lp-bar{height:6px;border-radius:6px;background:#2a2e38;margin:10px 0 18px;overflow:hidden;}
+.lp-bar i{display:block;height:100%;background:linear-gradient(90deg,#2f6fed,#8b5cf6);width:0%;transition:width .5s ease;}
+.lp-row{display:flex;align-items:center;gap:10px;padding:8px 8px;border-radius:8px;cursor:pointer;transition:.15s;}
+.lp-row:hover{background:rgba(255,255,255,.06);}
+.lp-eye{width:16px;text-align:center;color:#7d8494;font-size:12px;}
+.lp-thumb{width:34px;height:26px;border-radius:5px;background:#12141a;border:1px solid #333844;position:relative;overflow:hidden;flex-shrink:0;}
+.lp-thumb i{position:absolute;left:0;bottom:0;width:100%;background:linear-gradient(180deg,#2f6fed,#8b5cf6);transition:height .5s ease;}
+.lp-label{flex:1;min-width:0;}
+.lp-label b{display:block;font-size:12px;font-weight:600;color:#eef0f4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.lp-label small{font-size:10.5px;color:#7d8494;}
+.lp-pct{font-size:11px;color:#9aa2b1;font-weight:600;width:32px;text-align:right;}
+.lp-note{font-size:11px;color:#6d7488;margin-top:16px;line-height:1.5;border-top:1px solid rgba(255,255,255,.08);padding-top:14px;}
+.lp-grade{margin-top:14px;padding:12px;border-radius:10px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);}
+.lp-grade b{display:block;font-size:1.4rem;font-family:'Poppins',sans-serif;color:#fff;}
+.lp-grade span{font-size:11px;color:#8f96a6;}
+.lp-report-btn{width:100%;margin-top:12px;padding:10px;border-radius:9px;border:none;background:linear-gradient(90deg,#2f6fed,#8b5cf6);color:#fff;font-weight:700;font-size:12.5px;cursor:pointer;}
+.lp-report-btn:hover{opacity:.92;}
+.lp-signout{width:100%;margin-top:8px;padding:8px;border-radius:9px;border:1px solid rgba(255,255,255,.15);background:transparent;color:#9aa2b1;font-weight:600;font-size:11.5px;cursor:pointer;}
+.hero{background:linear-gradient(135deg,#1c2030,#2f6fed 140%);color:#fff;border-radius:22px;padding:56px 44px;position:relative;overflow:hidden;box-shadow:var(--shadow);}
+.hero::before{content:"";position:absolute;right:-60px;top:-60px;width:280px;height:280px;border-radius:50%;background:radial-gradient(circle,rgba(139,92,246,.45),transparent 70%);}
+.hero-eyebrow{font-size:12px;letter-spacing:2px;text-transform:uppercase;color:#b9c6ff;font-weight:700;}
+.hero h1{font-size:2.4rem;margin:10px 0 12px;font-weight:800;max-width:640px;}
+.hero p{font-size:1.05rem;color:#d7ddf5;max-width:560px;line-height:1.6;margin:0 0 26px;}
+.hero-actions{display:flex;gap:12px;flex-wrap:wrap;}
+.hbtn{padding:12px 20px;border-radius:11px;font-weight:700;font-size:14px;text-decoration:none;cursor:pointer;border:none;}
+.hbtn.primary{background:#fff;color:#1c2030;}
+.hbtn.ghost{background:rgba(255,255,255,.12);color:#fff;border:1px solid rgba(255,255,255,.3);}
+.stat-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:16px;margin-top:34px;}
+.stat{background:#fff;border-radius:14px;padding:18px;box-shadow:var(--shadow);}
+.stat b{display:block;font-size:1.6rem;font-family:'Poppins',sans-serif;}
+.stat span{font-size:12.5px;color:var(--muted);}
+.home-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:18px;margin-top:26px;}
+.home-card{background:var(--panel);border-radius:16px;padding:22px;box-shadow:var(--shadow);border-top:4px solid var(--accent,#2f6fed);cursor:pointer;transition:.2s;}
+.home-card:hover{transform:translateY(-4px);}
+.home-card h4{margin:0 0 6px;font-size:16px;}
+.home-card p{margin:0;font-size:13px;color:var(--muted);line-height:1.5;}
+.section-heading{margin:44px 0 6px;font-size:1.05rem;color:var(--muted);font-weight:700;letter-spacing:.4px;text-transform:uppercase;}
+.view-head{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:14px;margin-bottom:18px;}
+.view-head h2{margin:0;font-size:1.6rem;}
+.view-head p{margin:4px 0 0;color:var(--muted);font-size:13.5px;}
+.week-nav{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 8px;}
+.week-pill{border:1px solid var(--line);background:#fff;padding:7px 13px;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;color:var(--muted);}
+.week-pill.active{background:var(--ink);color:#fff;border-color:var(--ink);}
+.week-card{margin:34px 0 10px;scroll-margin-top:75px;}
+.week-card h2.wk{font-size:1.35rem;margin-bottom:4px;color:var(--c-curriculum);display:flex;align-items:center;gap:10px;}
+.week-card h2.wk::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--c-curriculum);}
+.week-meta-line{font-size:12px;color:var(--muted);font-weight:600;margin:0 0 16px 18px;}
+.day-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px;}
+.flip-card{background:transparent;width:100%;height:400px;perspective:1200px;opacity:0;transform:translateY(30px);transition:all .6s ease-out;}
+.flip-card.visible{opacity:1;transform:translateY(0);}
+.flip-card.done .flip-card-inner{box-shadow:0 0 0 2px var(--c-curriculum),0 12px 24px rgba(47,111,237,.18);}
+.flip-card-inner{position:relative;width:100%;height:100%;text-align:center;transition:transform .7s ease;transform-style:preserve-3d;border-radius:14px;cursor:pointer;box-shadow:0 8px 20px rgba(15,17,23,.10);}
+.flip-card:hover .flip-card-inner,.flip-card.flipped .flip-card-inner{transform:rotateY(180deg) translateY(-4px);}
+.flip-card-front,.flip-card-back{position:absolute;width:100%;height:100%;backface-visibility:hidden;border-radius:14px;padding:18px 20px;font-size:.92rem;display:flex;flex-direction:column;justify-content:center;box-sizing:border-box;}
+.flip-card-front{background:#fff;border-left:5px solid var(--c-curriculum);}
+.flip-card-front h4{margin:0 0 8px;font-size:1rem;}
+.flip-card-front p{margin:0;color:var(--muted);}
+.flip-card-back{background:#eef3ff;transform:rotateY(180deg);border-left:5px solid #3f51b5;overflow-y:auto;overflow-x:hidden;text-align:left;justify-content:flex-start;}
+.vocab-title{margin-bottom:5px;font-weight:700;color:#3f51b5;font-size:.78rem;text-transform:uppercase;letter-spacing:.5px;}
+.vocab{font-weight:600;color:var(--c-curriculum);border-bottom:1px dotted var(--c-curriculum);cursor:pointer;}
+.vocab-def{font-weight:400;font-style:italic;color:#4a4f5c;font-size:.86rem;}
+.big-ideas{margin-top:10px;font-size:.83rem;font-style:italic;color:#555;}
+.summary-text{font-weight:600;color:#333;margin-top:8px;font-size:.85rem;}
+.project-day .flip-card-front,.project-day .flip-card-back{border:3px solid var(--c-projects);}
+.project-label{color:#fff;font-weight:700;padding:4px 10px;border-radius:7px;position:absolute;top:14px;left:14px;font-size:.7rem;letter-spacing:.5px;background:var(--c-projects);}
+.flip-hint{position:absolute;bottom:10px;right:14px;font-size:10px;color:var(--muted);opacity:.6;letter-spacing:.3px;}
+.coming-soon-block{background:#fff;border:2px dashed var(--line);border-radius:16px;padding:30px 26px;margin-top:38px;text-align:center;color:var(--muted);}
+.coming-soon-block h3{margin:0 0 6px;color:var(--ink);}
+.subnav{display:flex;gap:8px;flex-wrap:wrap;margin:18px 0 28px;}
+.subnav button{border:1px solid var(--line);background:#fff;padding:10px 16px;border-radius:11px;font-size:13px;font-weight:700;cursor:pointer;color:var(--muted);}
+.subnav button.active{background:var(--c-projects);border-color:var(--c-projects);color:#fff;}
+.proj-view{display:none;}
+.proj-view.active{display:block;animation:fade .4s ease;}
+.note-section{background:#fff;border-radius:16px;box-shadow:var(--shadow);margin-bottom:20px;padding:24px;position:relative;}
+.note-section h3{color:var(--c-notes);margin-top:0;font-size:1.15rem;}
+.note-dl{position:absolute;top:20px;right:20px;background:var(--c-notes);color:#fff;border:none;border-radius:9px;padding:8px 14px;font-size:12.5px;font-weight:700;cursor:pointer;}
+.note-dl:hover{opacity:.88;}
+.note-tool,.note-tip,.note-visual{border-left:4px solid var(--c-notes);padding:.8rem 1rem;border-radius:8px;margin:1rem 0;background:#f5f2ff;font-size:.92rem;}
+.note-tip{border-left-color:var(--c-projects);background:#fff5ec;}
+.note-visual{border-left-color:#f59e0b;background:#fffaf0;}
+.note-steps{background:#f5f2ff;border-left:4px solid var(--c-notes);padding:.9rem 1.1rem;border-radius:8px;margin:0.4rem 0;}
+.media-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:16px;margin-top:18px;}
+.media-card{background:#fff;border-radius:14px;box-shadow:var(--shadow);display:flex;flex-direction:column;border-top:4px solid var(--card-accent,var(--c-screen));padding:18px;gap:8px;}
+.media-card .mc-icon{width:38px;height:38px;border-radius:10px;background:var(--card-accent,var(--c-screen));color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;}
+.media-card b{font-size:13.5px;}
+.media-card .mc-status{font-size:11px;font-weight:700;color:var(--card-accent,var(--c-screen));border:1px solid currentColor;border-radius:999px;padding:2px 9px;width:fit-content;opacity:.7;}
+.media-card p{margin:0;font-size:12.5px;color:var(--muted);line-height:1.5;}
+.media-card.video-card{padding:0;}
+.media-card .media-thumb{position:relative;width:100%;aspect-ratio:16/9;background:#0e1015;overflow:hidden;flex-shrink:0;}
+.media-card .media-thumb iframe{position:absolute;inset:0;width:100%;height:100%;border:0;display:block;}
+.media-card .media-thumb .thumb-poster{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:#0e1015;border:0;width:100%;cursor:pointer;padding:0;}
+.media-card .media-thumb .thumb-poster img.thumb-preview{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0;opacity:.85;}
+.media-card .media-thumb .thumb-poster .play-badge{position:relative;z-index:1;width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,.92);color:var(--card-accent,var(--c-screen));display:flex;align-items:center;justify-content:center;font-size:16px;box-shadow:0 6px 16px rgba(0,0,0,.3);}
+.media-card .video-body{padding:14px 16px 16px;}
+.media-card .video-body b{display:block;margin-bottom:4px;}
+.media-card .video-body a{font-size:12px;font-weight:700;color:var(--card-accent,var(--c-screen));text-decoration:none;}
+.file-card .mc-icon{background:var(--c-practice);}
+.file-card a.file-dl{margin-top:2px;font-size:12px;font-weight:700;color:var(--c-practice);text-decoration:none;}
+.group-label{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin:26px 0 4px;}
+footer.appfoot{position:relative;z-index:10;text-align:center;color:var(--muted);font-size:13px;padding:26px 20px;background:#fff;border-top:1px solid var(--line);}
+footer.appfoot .foot-contact{display:inline-flex;align-items:center;gap:8px;margin-top:6px;font-weight:700;}
+footer.appfoot .foot-contact a{color:var(--c-curriculum);text-decoration:none;}
+footer.appfoot .foot-contact a:hover{text-decoration:underline;}
+.progress-hero{background:linear-gradient(135deg,#1c2030,#2f6fed 150%);color:#fff;border-radius:20px;padding:30px 32px;display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap;box-shadow:var(--shadow);}
+.progress-hero .ph-grade b{font-size:2.4rem;font-family:'Poppins',sans-serif;display:block;}
+.progress-hero .ph-grade span{font-size:12.5px;color:#c9d3f5;}
+.progress-hero .ph-bar-wrap{flex:1;min-width:220px;}
+.progress-hero .ph-bar{height:10px;border-radius:8px;background:rgba(255,255,255,.18);overflow:hidden;margin-top:8px;}
+.progress-hero .ph-bar i{display:block;height:100%;background:#fff;width:0%;transition:width .5s ease;}
+.progress-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-top:22px;}
+.progress-card{background:#fff;border-radius:14px;padding:18px;box-shadow:var(--shadow);border-top:4px solid var(--pc-accent,#2f6fed);}
+.progress-card h4{margin:0 0 10px;font-size:13.5px;}
+.progress-card .pc-big{font-size:1.6rem;font-family:'Poppins',sans-serif;font-weight:800;}
+.progress-card .pc-sub{font-size:11.5px;color:var(--muted);}
+.progress-week-table{width:100%;border-collapse:collapse;margin-top:10px;font-size:13px;}
+.progress-week-table th,.progress-week-table td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--line);}
+.progress-week-table th{color:var(--muted);font-weight:700;font-size:11.5px;text-transform:uppercase;letter-spacing:.4px;}
+.pw-badge{display:inline-block;padding:2px 9px;border-radius:999px;font-size:11px;font-weight:700;}
+.pw-badge.done{background:#e7f6ee;color:#1a8a52;}
+.pw-badge.partial{background:#fff4e0;color:#b3720c;}
+.pw-badge.notstarted{background:#f1f2f5;color:#8a90a0;}
+.progress-signedout{text-align:center;padding:60px 24px;color:var(--muted);}
+#signInGate{position:fixed;inset:0;z-index:5000;background:linear-gradient(135deg,#1c2030,#2f6fed 160%);display:flex;align-items:center;justify-content:center;padding:20px;}
+#signInGate.hidden{display:none;}
+.si-card{background:#fff;border-radius:20px;padding:34px 30px;max-width:400px;width:100%;box-shadow:0 30px 70px rgba(0,0,0,.4);}
+.si-card .si-mark{width:46px;height:46px;border-radius:12px;background:linear-gradient(135deg,#2f6fed,#8b5cf6);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:15px;margin-bottom:14px;}
+.si-card h2{margin:0 0 6px;font-size:1.3rem;}
+.si-card p{margin:0 0 20px;color:var(--muted);font-size:13.5px;line-height:1.5;}
+.si-card label{display:block;font-size:12.5px;font-weight:700;margin-bottom:6px;color:var(--ink);}
+.si-card input{width:100%;padding:11px 12px;border-radius:10px;border:1px solid var(--line);font-size:13.5px;margin-bottom:14px;font-family:inherit;}
+.si-card input:focus{outline:2px solid var(--c-curriculum);border-color:var(--c-curriculum);}
+.si-btn{width:100%;padding:12px;border-radius:11px;border:none;background:var(--c-curriculum);color:#fff;font-weight:700;font-size:14px;cursor:pointer;}
+.si-btn:hover{opacity:.92;}
+.si-error{background:#fff1f2;border:1px solid #fecdd3;color:#be123c;font-size:12.5px;padding:10px 12px;border-radius:10px;margin-bottom:14px;display:none;line-height:1.5;}
+.si-error.show{display:block;}
+.si-fine{font-size:11px;color:#9aa2b1;margin-top:14px;line-height:1.5;}
+.student-badge{display:flex;align-items:center;gap:10px;color:#fff;font-size:12px;white-space:nowrap;}
+.student-badge .sb-grade{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);border-radius:9px;padding:6px 10px;font-weight:800;font-family:'Poppins',sans-serif;}
+.student-badge .sb-name{opacity:.85;}
+.wq-modal{position:fixed;inset:0;z-index:4000;background:rgba(10,10,15,.55);display:none;align-items:center;justify-content:center;padding:20px;}
+.wq-modal.open{display:flex;}
+.wq-box{background:#fff;border-radius:18px;padding:28px;max-width:420px;width:100%;box-shadow:0 30px 70px rgba(0,0,0,.35);max-height:85vh;overflow-y:auto;}
+.wq-box .wq-tag{font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--c-curriculum);}
+.wq-box h3{margin:8px 0 14px;font-size:1.1rem;}
+.wq-box textarea{width:100%;min-height:90px;border-radius:10px;border:1px solid var(--line);padding:10px 12px;font-family:inherit;font-size:13.5px;resize:vertical;margin-bottom:12px;}
+.wq-box .wq-actions{display:flex;gap:10px;justify-content:flex-end;}
+.wq-box button{border:none;border-radius:10px;padding:10px 16px;font-weight:700;font-size:13px;cursor:pointer;}
+.wq-box .wq-skip{background:transparent;color:var(--muted);}
+.wq-box .wq-submit{background:var(--c-curriculum);color:#fff;}
+.skip-link{position:absolute;left:-999px;top:auto;background:#fff;color:#1a1d24;padding:10px 16px;border-radius:0 0 8px 0;z-index:6000;font-weight:700;font-size:13px;}
+.skip-link:focus{left:0;top:0;}
+a:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible{outline:2px solid #2f6fed;outline-offset:2px;}
+@media(prefers-reduced-motion:reduce){*{animation-duration:.01ms !important;animation-iteration-count:1 !important;transition-duration:.01ms !important;scroll-behavior:auto !important;}}
+@media(max-width:980px){.layers-panel{position:fixed;right:0;top:57px;z-index:900;box-shadow:-8px 0 26px rgba(0,0,0,.3);}}
+@media(max-width:640px){.hero{padding:36px 22px;}.hero h1{font-size:1.7rem;}.canvas{padding:22px 14px 60px;}.layers-panel{width:88vw;max-width:320px;}}
+</style>
+</head>
+<body>
+<a class="skip-link" href="#mainContent">Skip to content</a>
+<!-- ========== SIGN-IN GATE ========== -->
+<div id="signInGate" role="dialog" aria-modal="true" aria-labelledby="siHeading">
+  <div class="si-card">
+    <div class="si-mark" aria-hidden="true">3D</div>
+    <h2 id="siHeading">Sign in to start</h2>
+    <p>Enter your name and the email your instructor has on file. Your progress, weekly check-ins, and grade are tracked under this account for the Live 3D Home 16-Week Studio.</p>
+    <div class="si-error" id="siError" role="alert"></div>
+    <form id="siForm" novalidate>
+      <label for="siName">Full name</label>
+      <input id="siName" name="name" type="text" placeholder="e.g. Selam Tesfaye" autocomplete="name" required>
+      <label for="siEmail">Student email</label>
+      <input id="siEmail" name="email" type="email" placeholder="you@example.com" autocomplete="email" required>
+      <button class="si-btn" id="siSubmit" type="submit">Sign In</button>
+    </form>
+    <div class="si-fine">This device remembers one student account at a time. Once you're signed in here, this browser won't let a different email enroll — sign out first if you need to switch. (This is a browser-level check, not account security — clearing browser data resets it.) Signing back in with the same email picks up exactly where you left off. Questions? <a href="mailto:thomas@hmacademy.org" style="color:#2f6fed;font-weight:700;">thomas@hmacademy.org</a></div>
+  </div>
+</div>
+<!-- ========== WEEKLY CHECK-IN MODAL ========== -->
+<div class="wq-modal" id="wqModal" role="dialog" aria-modal="true" aria-labelledby="wqQuestion">
+  <div class="wq-box">
+    <div class="wq-tag" id="wqWeekTag">Weekly Check-In</div>
+    <h3 id="wqQuestion">How did this week's lessons go?</h3>
+    <div id="wqQuizBody"></div>
+    <label for="wqAnswer" id="wqAnswerLabel" style="display:block;font-size:12px;font-weight:700;margin-bottom:6px;">Your answer</label>
+    <textarea id="wqAnswer" placeholder="Type a few sentences..."></textarea>
+    <div class="wq-actions">
+      <button class="wq-skip" id="wqSkip" type="button">Remind me later</button>
+      <button class="wq-submit" id="wqSubmit" type="button">Submit &amp; Send Report</button>
+    </div>
+  </div>
+</div>
+<div class="app">
+  <header class="topbar">
+    <button class="brand" id="brandHomeBtn" type="button" aria-label="Go to Home">
+      <div class="mark" aria-hidden="true">3D</div>
+      <div>
+        <div class="name">Live 3D Home</div>
+        <div class="sub">16-Week Studio</div>
+      </div>
+    </button>
+    <nav class="tabs" id="mainTabs" aria-label="Main sections">
+      <button class="tab active" data-tab="home" role="tab" aria-selected="true">Home</button>
+      <button class="tab" data-tab="curriculum" role="tab" aria-selected="false">Curriculum</button>
+      <button class="tab" data-tab="projects" role="tab" aria-selected="false">Studio Project</button>
+      <button class="tab" data-tab="notes" role="tab" aria-selected="false">Read Me</button>
+      <button class="tab" data-tab="screencasts" role="tab" aria-selected="false">Screencasts</button>
+      <button class="tab" data-tab="practice" role="tab" aria-selected="false">Practice Files</button>
+      <button class="tab" data-tab="materials" role="tab" aria-selected="false">Additional Materials</button>
+    </nav>
+    <button class="progress-nav-btn" id="progressNavBtn" type="button">My Progress</button>
+    <div class="student-badge" id="studentBadge" style="display:none;">
+      <span class="sb-name" id="sbName"></span>
+      <span class="sb-grade" id="sbGrade">—</span>
+    </div>
+    <button class="panel-toggle" id="lpToggle" aria-expanded="true" aria-controls="layersPanel">Layers ▾</button>
+  </header>
+  <div class="workspace">
+    <main class="canvas" id="mainContent">
+      <!-- ========== HOME ========== -->
+      <section id="home" class="view active">
+        <div class="hero">
+          <div class="hero-eyebrow">16-Week Studio Course</div>
+          <h1>Design real homes in 3D — from blank lot to a finished, rendered capstone walkthrough.</h1>
+          <p>Everything for the course lives here: the week-by-week curriculum (2 class days a week), your Studio Project and Capstone Project, detailed reading notes, screencast recordings, and downloadable practice files — all in one workspace.</p>
+          <div class="hero-actions">
+            <button class="hbtn primary" onclick="goTab('curriculum')">Start Week 1</button>
+            <button class="hbtn ghost" onclick="goTab('notes')">Open Read Me Notes</button>
+          </div>
+        </div>
+        <div class="stat-row">
+          <div class="stat"><b>16</b><span>Weeks of curriculum</span></div>
+          <div class="stat"><b>2</b><span>Class days every week (32 total)</span></div>
+          <div class="stat"><b>2</b><span>Projects — Studio + Capstone</span></div>
+          <div class="stat"><b>36+</b><span>Official screencasts, mapped week by week</span></div>
+        </div>
+        <div class="section-heading">Jump to a section</div>
+        <div class="home-grid">
+          <div class="home-card" style="--accent:#2f6fed" onclick="goTab('curriculum')" role="button" tabindex="0" onkeydown="if(event.key==='Enter')goTab('curriculum')">
+            <h4>Curriculum</h4>
+            <p>Flip through Weeks 1–16 — interface basics through advanced roofs, terrain, AR, and your final capstone.</p>
+          </div>
+          <div class="home-card" style="--accent:#ff7a2d" onclick="goTab('projects')" role="button" tabindex="0" onkeydown="if(event.key==='Enter')goTab('projects')">
+            <h4>Studio Project</h4>
+            <p>Your Week 3 living-room project and your Weeks 14–16 capstone home — briefs and rubrics live here.</p>
+          </div>
+          <div class="home-card" style="--accent:#8b5cf6" onclick="goTab('notes')" role="button" tabindex="0" onkeydown="if(event.key==='Enter')goTab('notes')">
+            <h4>Read Me Notes</h4>
+            <p>Written lessons with tools, tips, and step-by-step instructions — downloadable as PDF.</p>
+          </div>
+          <div class="home-card" style="--accent:#12a394" onclick="goTab('screencasts')" role="button" tabindex="0" onkeydown="if(event.key==='Enter')goTab('screencasts')">
+            <h4>Screencasts</h4>
+            <p>Recorded tutorial walkthroughs, grouped by the week they support.</p>
+          </div>
+          <div class="home-card" style="--accent:#ef476f" onclick="goTab('practice')" role="button" tabindex="0" onkeydown="if(event.key==='Enter')goTab('practice')">
+            <h4>Practice Files</h4>
+            <p>Downloadable starter projects and exercise files, one per week.</p>
+          </div>
+          <div class="home-card" style="--accent:#5b6270" onclick="goTab('materials')" role="button" tabindex="0" onkeydown="if(event.key==='Enter')goTab('materials')">
+            <h4>Additional Materials</h4>
+            <p>Extra resources your instructor adds over the course — check back here.</p>
+          </div>
+          <div class="home-card" style="--accent:#2f6fed" onclick="goTab('progress')" role="button" tabindex="0" onkeydown="if(event.key==='Enter')goTab('progress')">
+            <h4>My Progress</h4>
+            <p>Your grade, completed lessons, week quizzes, vocabulary, reading, and videos watched — all in one place.</p>
+          </div>
+        </div>
+      </section>
+      <!-- ========== CURRICULUM ========== -->
+      <section id="curriculum" class="view">
+        <div class="view-head">
+          <div>
+            <h2>Curriculum</h2>
+            <p>Class meets 2 days a week, one period each day. Tap any card to flip it and mark that lesson complete — progress saves automatically. Finishing both days in a week pops up that week's check-in quiz.</p>
+          </div>
+        </div>
+        <div class="week-nav" id="weekNav"></div>
+
+        <div class="week-card" id="week1">
+          <h2 class="wk">Week 1 — Getting Started with Live 3D Home</h2>
+          <p class="week-meta-line">2 class days · 1 period each</p>
+          <div class="day-grid">
+            <div class="flip-card" data-day="1-1"><div class="flip-card-inner">
+              <div class="flip-card-front"><h4>Day 1: The Interface, Walls &amp; Rooms</h4><p>Tour the workspace and toolbars, then draw your first walls and auto-detect rooms.</p><span class="flip-hint">Tap to flip</span></div>
+              <div class="flip-card-back"><div class="vocab-title">Vocabulary</div>
+              <p><span class="vocab" tabindex="0" data-def="The 2D top-down view used for drawing walls and rooms.">Plan View</span><span class="vocab-def"> — The 2D top-down view used for drawing walls and rooms.</span>,
+              <span class="vocab" tabindex="0" data-def="The live 3D preview of your design.">3D View</span><span class="vocab-def"> — The live 3D preview of your design.</span>,
+              <span class="vocab" tabindex="0" data-def="Toolbox with wall, room, door, and furniture tools.">Toolbar</span><span class="vocab-def"> — Toolbox with wall, room, door, and furniture tools.</span>,
+              <span class="vocab" tabindex="0" data-def="A structural element you draw to enclose space.">Wall Tool</span><span class="vocab-def"> — A structural element you draw to enclose space.</span>,
+              <span class="vocab" tabindex="0" data-def="Automatically labels an enclosed area and its square footage.">Room Tool</span><span class="vocab-def"> — Automatically labels an enclosed area and its square footage.</span>,
+              <span class="vocab" tabindex="0" data-def="Locking measurements to exact values while drawing.">Precise Dimensions</span><span class="vocab-def"> — Locking measurements to exact values while drawing.</span></p>
+              <div class="big-ideas">Every design starts in Plan View and comes to life in 3D View. Accurate wall placement now saves hours of rework later — always check dimensions before moving on.</div>
+              </div></div></div>
+            <div class="flip-card" data-day="1-2"><div class="flip-card-inner">
+              <div class="flip-card-front"><h4>Day 2: Doors, Windows &amp; Practice</h4><p>Place and customize openings, then practice on a small room shell.</p><span class="flip-hint">Tap to flip</span></div>
+              <div class="flip-card-back"><div class="vocab-title">Vocabulary</div>
+              <p><span class="vocab" tabindex="0" data-def="Snapping an opening to sit exactly inside a wall.">Auto-Fit</span><span class="vocab-def"> — Snapping an opening to sit exactly inside a wall.</span>,
+              <span class="vocab" tabindex="0" data-def="Which way a door or casement opens.">Swing Direction</span><span class="vocab-def"> — Which way a door or casement opens.</span>,
+              <span class="vocab" tabindex="0" data-def="Height of the bottom of a window above the floor.">Sill Height</span><span class="vocab-def"> — Height of the bottom of a window above the floor.</span></p>
+              <div class="big-ideas">Doors and windows aren't just holes in a wall — swing direction and sill height affect real livability. Use the rest of the period to place openings in a practice room shell.</div>
+              </div></div></div>
+          </div>
+        </div>
+
+        <div class="week-card" id="week2">
+          <h2 class="wk">Week 2 — Building the Structure</h2>
+          <p class="week-meta-line">2 class days · 1 period each</p>
+          <div class="day-grid">
+            <div class="flip-card" data-day="2-1"><div class="flip-card-inner">
+              <div class="flip-card-front"><h4>Day 1: Floors, Levels &amp; Roof Design</h4><p>Add a second story, connect it with stairs, then generate and customize a roof.</p><span class="flip-hint">Tap to flip</span></div>
+              <div class="flip-card-back"><div class="vocab-title">Vocabulary</div>
+              <p><span class="vocab" tabindex="0" data-def="A separate floor stacked above or below the current one.">Level</span><span class="vocab-def"> — A separate floor stacked above or below the current one.</span>,
+              <span class="vocab" tabindex="0" data-def="Connects two levels and auto-calculates step count.">Stair Tool</span><span class="vocab-def"> — Connects two levels and auto-calculates step count.</span>,
+              <span class="vocab" tabindex="0" data-def="Steepness of a roof surface.">Pitch</span><span class="vocab-def"> — Steepness of a roof surface.</span>,
+              <span class="vocab" tabindex="0" data-def="A roof with four sloped sides.">Hip Roof</span><span class="vocab-def"> — A roof with four sloped sides.</span>,
+              <span class="vocab" tabindex="0" data-def="A roof with two sloped sides meeting at a ridge.">Gable Roof</span><span class="vocab-def"> — A roof with two sloped sides meeting at a ridge.</span></p>
+              <div class="big-ideas">Multi-story homes require every level to line up. The auto-roof tool gets you 90% there — small pitch and overhang adjustments make the last 10% look intentional.</div>
+              </div></div></div>
+            <div class="flip-card practice-day" data-day="2-2"><div class="flip-card-inner">
+              <div class="flip-card-front"><div class="project-label" style="background:#2e9e5b;">PRACTICE DAY</div><h4>Day 2: Build a One-Story House</h4><p>Combine walls, rooms, doors, windows, and a roof into a full shell.</p><span class="flip-hint">Tap to flip</span></div>
+              <div class="flip-card-back"><div class="vocab-title">Practice</div>
+              <p>Build a simple one-story, 2–3 room house shell using everything from Weeks 1–2. Save it — you'll furnish it in Week 3.</p>
+              <div class="big-ideas">Speed comes from repetition. This is your first full "start to shell" build.</div>
+              </div></div></div>
+          </div>
+        </div>
+
+        <div class="week-card" id="week3">
+          <h2 class="wk">Week 3 — Interior Design &amp; Furnishing</h2>
+          <p class="week-meta-line">2 class days · 1 period each</p>
+          <div class="day-grid">
+            <div class="flip-card" data-day="3-1"><div class="flip-card-inner">
+              <div class="flip-card-front"><h4>Day 1: Furniture, Materials &amp; Textures</h4><p>Browse and place furniture, then apply paint, flooring, and finish materials.</p><span class="flip-hint">Tap to flip</span></div>
+              <div class="flip-card-back"><div class="vocab-title">Vocabulary</div>
+              <p><span class="vocab" tabindex="0" data-def="A catalog of pre-made 3D furniture and fixture models.">Content Library</span><span class="vocab-def"> — A catalog of pre-made 3D furniture and fixture models.</span>,
+              <span class="vocab" tabindex="0" data-def="Rotating and nudging an object to sit flush against a wall.">Snap-to-Wall</span><span class="vocab-def"> — Rotating and nudging an object to sit flush against a wall.</span>,
+              <span class="vocab" tabindex="0" data-def="An image mapped onto a surface, like wood grain or tile.">Texture Map</span><span class="vocab-def"> — An image mapped onto a surface, like wood grain or tile.</span>,
+              <span class="vocab" tabindex="0" data-def="How glossy or matte a surface appears.">Finish</span><span class="vocab-def"> — How glossy or matte a surface appears.</span></p>
+              <div class="big-ideas">Furniture placement should follow how a room is actually used — walk the traffic path before you place a single chair. Materials do storytelling too: a warm wood floor changes the whole feel of a room.</div>
+              </div></div></div>
+            <div class="flip-card project-day" data-day="3-2"><div class="flip-card-inner">
+              <div class="flip-card-front"><div class="project-label">PROJECT DAY</div><h4>Day 2: Furnish a Living Room</h4><p>Studio Project work session — see the Studio Project tab.</p><span class="flip-hint">Tap to flip</span></div>
+              <div class="flip-card-back"><div class="vocab-title">Vocabulary</div>
+              <p><span class="vocab" tabindex="0" data-def="An imaginary center point furniture is arranged around.">Focal Point</span><span class="vocab-def"> — An imaginary center point furniture is arranged around.</span></p>
+              <div class="big-ideas">Full brief and rubric: Studio Project tab. Work on it during class and finish it at home if needed.</div>
+              </div></div></div>
+          </div>
+        </div>
+
+        <div class="week-card" id="week4">
+          <h2 class="wk">Week 4 — Lighting, Rendering &amp; First Milestone</h2>
+          <p class="week-meta-line">2 class days · 1 period each</p>
+          <div class="day-grid">
+            <div class="flip-card" data-day="4-1"><div class="flip-card-inner">
+              <div class="flip-card-front"><h4>Day 1: Lighting &amp; Camera Views</h4><p>Natural light, lamps, sun position, plus setting up camera views and a walkthrough path.</p><span class="flip-hint">Tap to flip</span></div>
+              <div class="flip-card-back"><div class="vocab-title">Vocabulary</div>
+              <p><span class="vocab" tabindex="0" data-def="Simulated sunlight based on real date, time, and location.">Sun Position</span><span class="vocab-def"> — Simulated sunlight based on real date, time, and location.</span>,
+              <span class="vocab" tabindex="0" data-def="A light source added to a room, like a lamp or ceiling fixture.">Point Light</span><span class="vocab-def"> — A light source added to a room, like a lamp or ceiling fixture.</span>,
+              <span class="vocab" tabindex="0" data-def="A saved viewpoint you can return to or export.">Camera View</span><span class="vocab-def"> — A saved viewpoint you can return to or export.</span>,
+              <span class="vocab" tabindex="0" data-def="A moving path through the model, like a video tour.">Walkthrough</span><span class="vocab-def"> — A moving path through the model, like a video tour.</span></p>
+              <div class="big-ideas">Good lighting sells a design — mix natural sun position with a couple of interior lights rather than one flat overhead source. A well-chosen camera angle communicates a design faster than any floor plan.</div>
+              </div></div></div>
+            <div class="flip-card project-day" data-day="4-2"><div class="flip-card-inner">
+              <div class="flip-card-front"><div class="project-label">PROJECT DAY</div><h4>Day 2: Milestone Render &amp; Present</h4><p>Render your one-story house and present it to the class.</p><span class="flip-hint">Tap to flip</span></div>
+              <div class="flip-card-back"><div class="vocab-title">Vocabulary</div>
+              <p><span class="vocab" tabindex="0" data-def="Generating a high-quality final image from your 3D model.">Render</span><span class="vocab-def"> — Generating a high-quality final image from your 3D model.</span></p>
+              <div class="big-ideas">This closes out the foundational module (Weeks 1–4). Everything from here builds on this base house.</div>
+              <img src="https://www.livehome3d.com/support/help/ios/en/images/light_shadow_on.png" alt="Sample final render with lights and shadows enabled" style="width:100%;border-radius:8px;margin-top:8px;border:1px solid var(--line);">
+              <p class="summary-text">Target quality — a full sample render file is downloadable in Practice Files.</p>
+              </div></div></div>
+          </div>
+        </div>
+
+        <div class="week-card" id="week5">
+          <h2 class="wk">Week 5 — Advanced Roofs</h2>
+          <p class="week-meta-line">2 class days · 1 period each</p>
+          <div class="day-grid">
+            <div class="flip-card" data-day="5-1"><div class="flip-card-inner">
+              <div class="flip-card-front"><h4>Day 1: Contour-Based Custom Roofs</h4><p>Break out of AutoRoof presets by editing a roof's outline directly.</p><span class="flip-hint">Tap to flip</span></div>
+              <div class="flip-card-back"><div class="vocab-title">Vocabulary</div>
+              <p><span class="vocab" tabindex="0" data-def="A draggable point along a roof outline used to reshape it into a custom, non-standard form.">Contour Point</span><span class="vocab-def"> — A draggable point along a roof outline used to reshape it into a custom, non-standard form.</span>,
+              <span class="vocab" tabindex="0" data-def="A roof built from a hand-edited outline rather than the AutoRoof algorithm.">Custom Roof</span><span class="vocab-def"> — A roof built from a hand-edited outline rather than the AutoRoof algorithm.</span></p>
+              <div class="big-ideas">Contour points let you build shapes AutoRoof can't — at the cost of needing to keep the shape watertight yourself.</div>
+              </div></div></div>
+            <div class="flip-card" data-day="5-2"><div class="flip-card-inner">
+              <div class="flip-card-front"><h4>Day 2: Customizing Roofs &amp; Dormers</h4><p>Fine-tune roof planes and add a dormer for light and headroom.</p><span class="flip-hint">Tap to flip</span></div>
+              <div class="flip-card-back"><div class="vocab-title">Vocabulary</div>
+              <p><span class="vocab" tabindex="0" data-def="A small roofed structure projecting from a sloped roof, usually housing a window.">Dormer</span><span class="vocab-def"> — A small roofed structure projecting from a sloped roof, usually housing a window.</span>,
+              <span class="vocab" tabindex="0" data-def="One flat sloped surface of a roof that can be edited independently.">Roof Plane</span><span class="vocab-def"> — One flat sloped surface of a roof that can be edited independently.</span></p>
+              <div class="big-ideas">Dormers add headroom and light to an attic level, but each one is a small roof intersection — get the base roof right first.</div>
+              </div></div></div>
+          </div>
+        </div>
+
+        <div class="week-card" id="week6">
+          <h2 class="wk">Week 6 — Advanced House Forms</h2>
+          <p class="week-meta-line">2 class days · 1 period each</p>
+          <div class="day-grid">
+            <div class="flip-card" data-day="6-1"><div class="flip-card-inner">
+              <div class="flip-card-front"><h4>Day 1: A-Frame Houses</h4><p>Model a house where the roof is almost the entire exterior.</p><span class="flip-hint">Tap to flip</span></div>
+              <div class="flip-card-back"><div class="vocab-title">Vocabulary</div>
+              <p><span class="vocab" tabindex="0" data-def="A house form where the roof slopes reach nearly to the ground on two sides, forming a triangular silhouette.">A-Frame</span><span class="vocab-def"> — A house form where the roof slopes reach nearly to the ground on two sides, forming a triangular silhouette.</span>,
+              <span class="vocab" tabindex="0" data-def="The top horizontal member an A-frame's roof slopes meet at.">Ridge Beam</span><span class="vocab-def"> — The top horizontal member an A-frame's roof slopes meet at.</span></p>
+              <div class="big-ideas">A-frames have almost no vertical exterior wall — most of what you'd normally model as "wall" is actually roof.</div>
+              </div></div></div>
+            <div class="flip-card" data-day="6-2"><div class="flip-card-inner">
+              <div class="flip-card-front"><h4>Day 2: Split-Levels &amp; Basement Garages</h4><p>Offset floor levels by a half-story and add a below-grade garage.</p><span class="flip-hint">Tap to flip</span></div>
+              <div class="flip-card-back"><div class="vocab-title">Vocabulary</div>
+              <p><span class="vocab" tabindex="0" data-def="A house design where floor levels are offset by a half-story instead of stacking directly.">Split-Level</span><span class="vocab-def"> — A house design where floor levels are offset by a half-story instead of stacking directly.</span>,
+              <span class="vocab" tabindex="0" data-def="A garage located below the main living level, usually needing a sloped driveway approach.">Basement Garage</span><span class="vocab-def"> — A garage located below the main living level, usually needing a sloped driveway approach.</span></p>
+              <div class="big-ideas">Split-levels and basement garages both hinge on getting Level heights right before you draw a single wall.</div>
+              </div></div></div>
+          </div>
+        </div>
+
+        <div class="week-card" id="week7">
+          <h2 class="wk">Week 7 — Outdoor Living Spaces</h2>
+          <p class="week-meta-line">2 class days · 1 period each</p>
+          <div class="day-grid">
+            <div class="flip-card" data-day="7-1"><div class="flip-card-inner">
+              <div class="flip-card-front"><h4>Day 1: Balconies &amp; Porches</h4><p>Add outdoor platforms and covered entries.</p><span class="flip-hint">Tap to flip</span></div>
+              <div class="flip-card-back"><div class="vocab-title">Vocabulary</div>
+              <p><span class="vocab" tabindex="0" data-def="An outdoor platform projecting from an upper floor, enclosed by a railing.">Balcony</span><span class="vocab-def"> — An outdoor platform projecting from an upper floor, enclosed by a railing.</span>,
+              <span class="vocab" tabindex="0" data-def="A covered outdoor structure attached to a house entrance.">Porch</span><span class="vocab-def"> — A covered outdoor structure attached to a house entrance.</span></p>
+              <div class="big-ideas">Balconies and porches are transition spaces — they should read as an extension of the interior room they connect to.</div>
+              </div></div></div>
+            <div class="flip-card" data-day="7-2"><div class="flip-card-inner">
+              <div class="flip-card-front"><h4>Day 2: Decks &amp; Outdoor Kitchens</h4><p>Build a raised deck and an outdoor cooking area.</p><span class="flip-hint">Tap to flip</span></div>
+              <div class="flip-card-back"><div class="vocab-title">Vocabulary</div>
+              <p><span class="vocab" tabindex="0" data-def="A raised outdoor platform, usually wood or composite, attached to a house at grade or floor level.">Deck</span><span class="vocab-def"> — A raised outdoor platform, usually wood or composite, attached to a house at grade or floor level.</span>,
+              <span class="vocab" tabindex="0" data-def="An exterior cooking and dining area modeled with the same wall/room/object tools used indoors.">Outdoor Kitchen</span><span class="vocab-def"> — An exterior cooking and dining area modeled with the same wall/room/object tools used indoors.</span></p>
+              <div class="big-ideas">Outdoor kitchens are placed like interior rooms but need weather-appropriate materials and finishes.</div>
+              </div></div></div>
+          </div>
+        </div>
+
+        <div class="week-card" id="week8">
+          <h2 class="wk">Week 8 — Site &amp; Terrain</h2>
+          <p class="week-meta-line">2 class days · 1 period each</p>
+          <div class="day-grid">
+            <div class="flip-card" data-day="8-1"><div class="flip-card-inner">
+              <div class="flip-card-front"><h4>Day 1: Terrain Editing I</h4><p>Reshape the ground surrounding your house.</p><span class="flip-hint">Tap to flip</span></div>
+              <div class="flip-card-back"><div class="vocab-title">Vocabulary</div>
+              <p><span class="vocab" tabindex="0" data-def="The ground surface surrounding a house, which can be reshaped with elevation tools.">Terrain</span><span class="vocab-def"> — The ground surface surrounding a house, which can be reshaped with elevation tools.</span>,
+              <span class="vocab" tabindex="0" data-def="A single point on the terrain whose height can be raised or lowered.">Elevation Point</span><span class="vocab-def"> — A single point on the terrain whose height can be raised or lowered.</span></p>
+              <div class="big-ideas">Terrain shaping should happen early — a house designed on flat ground can look wrong once the real site's slope is added.</div>
+              </div></div></div>
+            <div class="flip-card" data-day="8-2"><div class="flip-card-inner">
+              <div class="flip-card-front"><h4>Day 2: Terrain Editing II &amp; Courtyards</h4><p>Visualize slope with contour lines and design an enclosed courtyard.</p><span class="flip-hint">Tap to flip</span></div>
+              <div class="flip-card-back"><div class="vocab-title">Vocabulary</div>
+              <p><span class="vocab" tabindex="0" data-def="A line connecting points of equal elevation on a terrain, used to visualize slope.">Contour Line</span><span class="vocab-def"> — A line connecting points of equal elevation on a terrain, used to visualize slope.</span>,
+              <span class="vocab" tabindex="0" data-def="An open-air space enclosed on some or all sides by the building itself.">Courtyard</span><span class="vocab-def"> — An open-air space enclosed on some or all sides by the building itself.</span></p>
+              <div class="big-ideas">A courtyard is really an exterior "room" — the same room-detection logic applies, just without a roof.</div>
+              </div></div></div>
+          </div>
+        </div>
+
+        <div class="week-card" id="week9">
+          <h2 class="wk">Week 9 — Advanced Modeling Techniques</h2>
+          <p class="week-meta-line">2 class days · 1 period each</p>
+          <div class="day-grid">
+            <div class="flip-card" data-day="9-1"><div class="flip-card-inner">
+              <div class="flip-card-front"><h4>Day 1: Boolean Operations</h4><p>Combine and cut shapes to build custom architectural details.</p><span class="flip-hint">Tap to flip</span></div>
+              <div class="flip-card-back"><div class="vocab-title">Vocabulary</div>
+              <p><span class="vocab" tabindex="0" data-def="Combining, subtracting, or intersecting two 3D shapes to create a new custom form.">Boolean Operation</span><span class="vocab-def"> — Combining, subtracting, or intersecting two 3D shapes to create a new custom form.</span>,
+              <span class="vocab" tabindex="0" data-def="The two most common Boolean actions: merging two objects, or cutting one shape out of another.">Union / Subtract</span><span class="vocab-def"> — The two most common Boolean actions: merging two objects, or cutting one shape out of another.</span></p>
+              <div class="big-ideas">Boolean tools are how you build the odd architectural details the built-in library doesn't have a preset for.</div>
+              </div></div></div>
+            <div class="flip-card" data-day="9-2"><div class="flip-card-inner">
+              <div class="flip-card-front"><h4>Day 2: Multiple Houses in a Project</h4><p>Lay out more than one building on a shared site.</p><span class="flip-hint">Tap to flip</span></div>
+              <div class="flip-card-back"><div class="vocab-title">Vocabulary</div>
+              <p><span class="vocab" tabindex="0" data-def="A single project file containing more than one house or structure, useful for a site plan.">Multi-Building Project</span><span class="vocab-def"> — A single project file containing more than one house or structure, useful for a site plan.</span>,
+              <span class="vocab" tabindex="0" data-def="A top-down layout showing how multiple buildings sit relative to each other and the property line.">Site Plan</span><span class="vocab-def"> — A top-down layout showing how multiple buildings sit relative to each other and the property line.</span></p>
+              <div class="big-ideas">A multi-house project is really several independent buildings sharing one piece of land — keep each one's Project Tree entry organized.</div>
+              </div></div></div>
+          </div>
+        </div>
+
+        <div class="week-card" id="week10">
+          <h2 class="wk">Week 10 — Materials Mastery</h2>
+          <p class="week-meta-line">2 class days · 1 period each</p>
+          <div class="day-grid">
+            <div class="flip-card" data-day="10-1"><div class="flip-card-inner">
+              <div class="flip-card-front"><h4>Day 1: Creating Tiled Materials</h4><p>Build a seamless, correctly scaled repeating texture.</p><span class="flip-hint">Tap to flip</span></div>
+              <div class="flip-card-back"><div class="vocab-title">Vocabulary</div>
+              <p><span class="vocab" tabindex="0" data-def="A texture designed to repeat seamlessly across a surface without visible seams.">Tiled Material</span><span class="vocab-def"> — A texture designed to repeat seamlessly across a surface without visible seams.</span>,
+              <span class="vocab" tabindex="0" data-def="The real-world size a single repeat of a tiled texture represents.">Tile Scale</span><span class="vocab-def"> — The real-world size a single repeat of a tiled texture represents.</span></p>
+              <div class="big-ideas">A believable tile material depends on scale as much as the image itself — always check it against a person-height object nearby.</div>
+              </div></div></div>
+            <div class="flip-card" data-day="10-2"><div class="flip-card-inner">
+              <div class="flip-card-front"><h4>Day 2: Background Images &amp; Context</h4><p>Ground an exterior render in a real-feeling setting.</p><span class="flip-hint">Tap to flip</span></div>
+              <div class="flip-card-back"><div class="vocab-title">Vocabulary</div>
+              <p><span class="vocab" tabindex="0" data-def="A photo placed behind a 3D scene to suggest a real-world setting outside a window.">Background Image</span><span class="vocab-def"> — A photo placed behind a 3D scene to suggest a real-world setting outside a window.</span>,
+              <span class="vocab" tabindex="0" data-def="The surrounding environment that helps a render feel situated in a real place.">Context</span><span class="vocab-def"> — The surrounding environment that helps a render feel situated in a real place.</span></p>
+              <div class="big-ideas">A background image is a cheap, fast way to make an exterior render feel grounded without modeling an entire neighborhood.</div>
+              </div></div></div>
+          </div>
+        </div>
+
+        <div class="week-card" id="week11">
+          <h2 class="wk">Week 11 — Performance &amp; Workflow</h2>
+          <p class="week-meta-line">2 class days · 1 period each</p>
+          <div class="day-grid">
+            <div class="flip-card" data-day="11-1"><div class="flip-card-inner">
+              <div class="flip-card-front"><h4>Day 1: Speeding Up 3D Performance</h4><p>Keep a big project fast to navigate and render.</p><span class="flip-hint">Tap to flip</span></div>
+              <div class="flip-card-back"><div class="vocab-title">Vocabulary</div>
+              <p><span class="vocab" tabindex="0" data-def="The number of individual surfaces in a 3D scene, which affects how fast it renders and navigates.">Polygon Count</span><span class="vocab-def"> — The number of individual surfaces in a 3D scene, which affects how fast it renders and navigates.</span>,
+              <span class="vocab" tabindex="0" data-def="Using simpler versions of an object's geometry when it's far from the camera.">Level of Detail</span><span class="vocab-def"> — Using simpler versions of an object's geometry when it's far from the camera.</span></p>
+              <div class="big-ideas">A slow project is almost always a materials-and-lights problem before it's a hardware problem — trim both first.</div>
+              </div></div></div>
+            <div class="flip-card" data-day="11-2"><div class="flip-card-inner">
+              <div class="flip-card-front"><h4>Day 2: Saving, Backups &amp; Transferring Projects</h4><p>Protect your work and move it between devices.</p><span class="flip-hint">Tap to flip</span></div>
+              <div class="flip-card-back"><div class="vocab-title">Vocabulary</div>
+              <p><span class="vocab" tabindex="0" data-def="A single packaged file containing a project plus any custom materials or objects it depends on.">Project Archive</span><span class="vocab-def"> — A single packaged file containing a project plus any custom materials or objects it depends on.</span>,
+              <span class="vocab" tabindex="0" data-def="A saved copy of a project at a point in time you can revert to.">Version Backup</span><span class="vocab-def"> — A saved copy of a project at a point in time you can revert to.</span></p>
+              <div class="big-ideas">A project without a recent backup is one crash away from a redo — treat saving as part of the workflow, not an afterthought.</div>
+              </div></div></div>
+          </div>
+        </div>
+
+        <div class="week-card" id="week12">
+          <h2 class="wk">Week 12 — AR &amp; 3D Navigation Mastery</h2>
+          <p class="week-meta-line">2 class days · 1 period each</p>
+          <div class="day-grid">
+            <div class="flip-card" data-day="12-1"><div class="flip-card-inner">
+              <div class="flip-card-front"><h4>Day 1: Scanning a Room in AR</h4><p>Capture a real room's dimensions with a device camera.</p><span class="flip-hint">Tap to flip</span></div>
+              <div class="flip-card-back"><div class="vocab-title">Vocabulary</div>
+              <p><span class="vocab" tabindex="0" data-def="Using a device's camera and sensors to capture a real room's dimensions directly into a project.">AR Room Scan</span><span class="vocab-def"> — Using a device's camera and sensors to capture a real room's dimensions directly into a project.</span>,
+              <span class="vocab" tabindex="0" data-def="The raw set of 3D points a scan captures before it's converted into walls.">Point Cloud</span><span class="vocab-def"> — The raw set of 3D points a scan captures before it's converted into walls.</span></p>
+              <div class="big-ideas">An AR scan gives you a fast, roughly accurate starting floor plan — always double-check its measurements against a tape measure.</div>
+              </div></div></div>
+            <div class="flip-card" data-day="12-2"><div class="flip-card-inner">
+              <div class="flip-card-front"><h4>Day 2: Mastering Movement &amp; Editing in 3D</h4><p>Navigate and edit confidently in the 3D view.</p><span class="flip-hint">Tap to flip</span></div>
+              <div class="flip-card-back"><div class="vocab-title">Vocabulary</div>
+              <p><span class="vocab" tabindex="0" data-def="Rotating the 3D camera around a fixed point to view a model from different angles.">Orbit</span><span class="vocab-def"> — Rotating the 3D camera around a fixed point to view a model from different angles.</span>,
+              <span class="vocab" tabindex="0" data-def="The on-screen handles used to move, rotate, or scale a selected object precisely.">Gizmo</span><span class="vocab-def"> — The on-screen handles used to move, rotate, or scale a selected object precisely.</span></p>
+              <div class="big-ideas">Fast, confident 3D navigation is a skill in itself — the less you fight the camera, the more time you spend actually designing.</div>
+              </div></div></div>
+          </div>
+        </div>
+
+        <div class="week-card" id="week13">
+          <h2 class="wk">Week 13 — Pro Workflows &amp; Real Estate</h2>
+          <p class="week-meta-line">2 class days · 1 period each</p>
+          <div class="day-grid">
+            <div class="flip-card" data-day="13-1"><div class="flip-card-inner">
+              <div class="flip-card-front"><h4>Day 1: Pro Edition Features</h4><p>See what the Pro tier adds for professional documentation.</p><span class="flip-hint">Tap to flip</span></div>
+              <div class="flip-card-back"><div class="vocab-title">Vocabulary</div>
+              <p><span class="vocab" tabindex="0" data-def="The higher tier of the app, adding features like custom roofs, CAD import/export, and construction documentation.">Live Home 3D Pro</span><span class="vocab-def"> — The higher tier of the app, adding features like custom roofs, CAD import/export, and construction documentation.</span>,
+              <span class="vocab" tabindex="0" data-def="Bringing in or sending out drawing files in formats used by professional design software.">CAD Import/Export</span><span class="vocab-def"> — Bringing in or sending out drawing files in formats used by professional design software.</span></p>
+              <div class="big-ideas">Pro features exist for people producing construction-ready documents — most hobbyist projects never need them, but it's good to know they're there.</div>
+              </div></div></div>
+            <div class="flip-card" data-day="13-2"><div class="flip-card-inner">
+              <div class="flip-card-front"><h4>Day 2: Live Home 3D for Real Estate</h4><p>Use the app to market a property, staged and rendered.</p><span class="flip-hint">Tap to flip</span></div>
+              <div class="flip-card-back"><div class="vocab-title">Vocabulary</div>
+              <p><span class="vocab" tabindex="0" data-def="A polished 3D image or walkthrough used to market a property for sale or rent.">Listing Render</span><span class="vocab-def"> — A polished 3D image or walkthrough used to market a property for sale or rent.</span>,
+              <span class="vocab" tabindex="0" data-def="Furnishing a real, currently-empty room digitally for marketing photos.">Virtual Staging</span><span class="vocab-def"> — Furnishing a real, currently-empty room digitally for marketing photos.</span></p>
+              <div class="big-ideas">Real estate work has a different goal than personal design — the render has to sell the space to someone who's never stood in it.</div>
+              </div></div></div>
+          </div>
+        </div>
+
+        <div class="week-card" id="week14">
+          <h2 class="wk">Week 14 — Capstone: Planning &amp; Shell</h2>
+          <p class="week-meta-line">2 class days · 1 period each</p>
+          <div class="day-grid">
+            <div class="flip-card project-day" data-day="14-1"><div class="flip-card-inner">
+              <div class="flip-card-front"><div class="project-label">CAPSTONE</div><h4>Day 1: Site &amp; Program</h4><p>Write your brief and choose your house's program.</p><span class="flip-hint">Tap to flip</span></div>
+              <div class="flip-card-back"><div class="vocab-title">Vocabulary</div>
+              <p><span class="vocab" tabindex="0" data-def="A written description of a project's goals, constraints, and requirements before design begins.">Design Brief</span><span class="vocab-def"> — A written description of a project's goals, constraints, and requirements before design begins.</span>,
+              <span class="vocab" tabindex="0" data-def="The list of rooms and their approximate sizes a house needs to satisfy its brief.">Program</span><span class="vocab-def"> — The list of rooms and their approximate sizes a house needs to satisfy its brief.</span></p>
+              <div class="big-ideas">Every good capstone starts with a clear brief — decide who the house is for and what it needs before drawing a single wall. Full brief and rubric: Studio Project tab.</div>
+              </div></div></div>
+            <div class="flip-card project-day" data-day="14-2"><div class="flip-card-inner">
+              <div class="flip-card-front"><div class="project-label">CAPSTONE</div><h4>Day 2: Building the Shell</h4><p>Walls, levels, and roof for your capstone home.</p><span class="flip-hint">Tap to flip</span></div>
+              <div class="flip-card-back"><div class="vocab-title">Vocabulary</div>
+              <p><span class="vocab" tabindex="0" data-def="The basic walls, floors, and roof of a house before any interior finishing.">Shell</span><span class="vocab-def"> — The basic walls, floors, and roof of a house before any interior finishing.</span></p>
+              <div class="big-ideas">Building the shell fast and correct now saves the most time in the weeks that follow — resist the urge to decorate early.</div>
+              </div></div></div>
+          </div>
+        </div>
+
+        <div class="week-card" id="week15">
+          <h2 class="wk">Week 15 — Capstone: Development</h2>
+          <p class="week-meta-line">2 class days · 1 period each</p>
+          <div class="day-grid">
+            <div class="flip-card project-day" data-day="15-1"><div class="flip-card-inner">
+              <div class="flip-card-front"><div class="project-label">CAPSTONE</div><h4>Day 1: Furnishing &amp; Materials</h4><p>Furnish and finish your capstone home.</p><span class="flip-hint">Tap to flip</span></div>
+              <div class="flip-card-back"><div class="vocab-title">Vocabulary</div>
+              <p><span class="vocab" tabindex="0" data-def="The overall feeling or story a finished interior is meant to communicate.">Design Intent</span><span class="vocab-def"> — The overall feeling or story a finished interior is meant to communicate.</span></p>
+              <div class="big-ideas">Every material and furniture choice should support the project's original brief — not just look good in isolation.</div>
+              </div></div></div>
+            <div class="flip-card project-day" data-day="15-2"><div class="flip-card-inner">
+              <div class="flip-card-front"><div class="project-label">CAPSTONE</div><h4>Day 2: Lighting &amp; Rendering</h4><p>Light your capstone home and produce final renders.</p><span class="flip-hint">Tap to flip</span></div>
+              <div class="flip-card-back"><div class="vocab-title">Vocabulary</div>
+              <p><span class="vocab" tabindex="0" data-def="The last, highest-quality render setting applied once a design is finished, prioritizing image quality over speed.">Final Render Pass</span><span class="vocab-def"> — The last, highest-quality render setting applied once a design is finished, prioritizing image quality over speed.</span></p>
+              <div class="big-ideas">Save your highest-quality render settings for the very end — working in low-res draft mode keeps the rest of the process fast.</div>
+              </div></div></div>
+          </div>
+        </div>
+
+        <div class="week-card" id="week16">
+          <h2 class="wk">Week 16 — Capstone: Presentation &amp; Review</h2>
+          <p class="week-meta-line">2 class days · 1 period each</p>
+          <div class="day-grid">
+            <div class="flip-card project-day" data-day="16-1"><div class="flip-card-inner">
+              <div class="flip-card-front"><div class="project-label">CAPSTONE</div><h4>Day 1: Walkthrough &amp; Polish</h4><p>Record a final walkthrough video and polish your model.</p><span class="flip-hint">Tap to flip</span></div>
+              <div class="flip-card-back"><div class="vocab-title">Vocabulary</div>
+              <p><span class="vocab" tabindex="0" data-def="A rendered movie following a camera path through a finished home model.">Walkthrough Video</span><span class="vocab-def"> — A rendered movie following a camera path through a finished home model.</span></p>
+              <div class="big-ideas">A walkthrough should tell a story — start at the entrance and move the way a real visitor would.</div>
+              </div></div></div>
+            <div class="flip-card project-day" data-day="16-2"><div class="flip-card-inner">
+              <div class="flip-card-front"><div class="project-label">FINAL PRESENTATION</div><h4>Day 2: Present Your Capstone</h4><p>Present your finished home design to the class.</p><span class="flip-hint">Tap to flip</span></div>
+              <div class="flip-card-back"><div class="vocab-title">Vocabulary</div>
+              <p><span class="vocab" tabindex="0" data-def="Structured feedback on a finished design from instructors or peers, used to identify strengths and next steps.">Critique</span><span class="vocab-def"> — Structured feedback on a finished design from instructors or peers, used to identify strengths and next steps.</span></p>
+              <div class="big-ideas">Presenting your own work clearly is as much a design skill as building it — be ready to explain your choices, not just show them. Congratulations on finishing all 16 weeks!</div>
+              </div></div></div>
+          </div>
+        </div>
+
+        <div class="coming-soon-block">
+          <h3>🎉 Course Complete</h3>
+          <p>This is the full 16-week curriculum. If your instructor extends the course further, additional weeks will appear here automatically.</p>
+        </div>
+      </section>
+
+      <!-- ========== STUDIO PROJECT ========== -->
+      <section id="projects" class="view">
+        <div class="view-head">
+          <div>
+            <h2>Studio Project</h2>
+            <p>Two hands-on design briefs anchor this course.</p>
+          </div>
+        </div>
+        <div class="note-section">
+          <h3 style="color:var(--c-projects);">Milestone Project — Furnish a Living Room (Week 3–4)</h3>
+          <p>Furnish and light the one-story house shell you built in Week 2. Full submission format and rubric will be published here by your instructor before Week 3.</p>
+        </div>
+        <div class="note-section">
+          <h3 style="color:var(--c-projects);">Capstone Project — Design a Complete Home (Weeks 14–16)</h3>
+          <p>Plan, build, furnish, light, render, and present an original home design using everything from the full 16 weeks. Full brief, submission format, and rubric will be published here by your instructor before Week 14.</p>
+        </div>
+        <div class="coming-soon-block">
+          <h3>Full briefs &amp; rubrics coming soon</h3>
+          <p>Reach out with questions: <a href="mailto:thomas@hmacademy.org" style="color:var(--c-projects);font-weight:700;">thomas@hmacademy.org</a>.</p>
+        </div>
+      </section>
+
+      <!-- ========== NOTES / READ ME ========== -->
+      <section id="notes" class="view">
+        <div class="view-head">
+          <div>
+            <h2>Read Me — Detailed Notes</h2>
+            <p>Written lessons adapted from the official Live Home 3D (iOS &amp; iPadOS) help documentation, with real screenshots from the app. Each section links to the full official page and can be downloaded on its own as a PDF. Opening a section counts toward your weekly reading check.</p>
+          </div>
+        </div>
+        <div class="note-section" id="intro" data-reading="intro">
+          <button class="note-dl" onclick="downloadSectionPDF('intro','Introduction to Live Home 3D')">Download PDF</button>
+          <h3>Introduction to Live Home 3D</h3>
+          <p>Live Home 3D is an app for creating floor plans and 3D renderings of interiors such as offices and living rooms — it can also be used to design an entire house and its surrounding property. For interior design it supplies libraries of 3D furniture, materials, and light sources, including catalog items modeled after real manufacturers. It can also model a house's exterior and landscape. Finished work can be exported or printed as floor plans and 3D renders, and the app can export a 3D model, panoramas, and fly-through movies. There are two editions — Live Home 3D and Live Home 3D Pro — and this course covers features common to both.</p>
+          <ol class="note-steps">
+            <li>Open the app and explore the workspace: Plan View, 3D View, and the side toolbar.</li>
+            <li>Familiarize yourself with essential panels: <strong>Project Tree</strong>, <strong>Inspector</strong>, <strong>Library</strong>.</li>
+            <li>Learn the basic workflow: walls → rooms → openings → furniture → materials → lighting → render.</li>
+            <li>Practice: draw a single rectangular room and watch it appear in 3D View instantly.</li>
+          </ol>
+          <div class="note-tool"><strong>Analogy:</strong> Plan View is your blueprint; 3D View is the finished building standing in front of you — they update together in real time.</div>
+          <div class="note-tip"><strong>Tip:</strong> Save your project after every major step so you can always undo a big mistake.</div>
+          <p><a href="https://www.livehome3d.com/support/help/ios/en/introduction-brief-description" target="_blank" rel="noopener" style="font-weight:700;color:var(--c-notes);">Read the full official guide →</a></p>
+        </div>
+        <div class="note-section" id="workspace" data-reading="workspace">
+          <button class="note-dl" onclick="downloadSectionPDF('workspace','The Live Home 3D Workspace')">Download PDF</button>
+          <h3>The Workspace — The Main Window</h3>
+          <img src="https://www.livehome3d.com/support/help/ios/en/images/main_window.png" alt="The Live Home 3D main window, showing the toolbar, Library panel, editing area, and Inspector" style="width:100%;border-radius:10px;margin:10px 0;border:1px solid var(--line);">
+          <p>The main window is made up of four parts: the toolbar at the top (with 2D Plan, 3D view, or 2D Elevation tools, depending on which view is active); the Library panel, which can show the 3D object library, the material library, or the Project Tree; the editing area itself, which displays your floor plan, elevation, or 3D view; and the Inspector, which shows properties for whatever is selected.</p>
+          <ol class="note-steps">
+            <li>Use the toolbar buttons to switch between the 2D Floor Plan and 3D views.</li>
+            <li>Open or close the Library panel to browse objects, materials, or the Project Tree.</li>
+            <li>Open the Inspector to see and edit the properties of anything you select.</li>
+          </ol>
+          <div class="note-tool"><strong>Tip from the docs:</strong> On a narrow screen, the 2D/3D switch may appear as a single button — a long-press reveals all view options at once.</div>
+          <p><a href="https://www.livehome3d.com/support/help/ios/en/live-home-3d-workspace-the-main-window" target="_blank" rel="noopener" style="font-weight:700;color:var(--c-notes);">Read the full official guide →</a></p>
+        </div>
+        <div class="note-section" id="objects" data-reading="objects">
+          <button class="note-dl" onclick="downloadSectionPDF('objects','Working with Objects — Basics')">Download PDF</button>
+          <h3>Working with Objects — Basics</h3>
+          <p>Objects fall into two broad groups: those created with drawing tools right inside the app (walls, floors, roofs), and pre-designed 3D models from the library or imported from elsewhere (furniture, doors, windows, staircases). To select an object, tap it in the 2D or 3D view; a selected object shows a green boundary in 3D, and resize/rotation handles in 2D plan view.</p>
+          <img src="https://www.livehome3d.com/support/help/ios/en/images/object_rotation_handle.png" alt="A selected object's selection frame with resize and rotation handles" style="width:100%;max-width:420px;border-radius:10px;margin:10px 0;border:1px solid var(--line);">
+          <ol class="note-steps">
+            <li>Tap an object once to select it; tap <strong>Done</strong> in the toolbar to deselect.</li>
+            <li>Drag a selected object to move it, or drag its round handle to rotate it.</li>
+            <li>Long-press an object to open its context menu.</li>
+            <li>On a crowded floor plan, tap up to three times in the same spot to drill down from room → group → individual object.</li>
+          </ol>
+          <div class="note-tip"><strong>Tip:</strong> Lock an object in the Project Tree to stop it from being moved by accident while you work around it.</div>
+          <p><a href="https://www.livehome3d.com/support/help/ios/en/working-with-objects-basics" target="_blank" rel="noopener" style="font-weight:700;color:var(--c-notes);">Read the full official guide →</a></p>
+        </div>
+        <div class="note-section" id="roofs" data-reading="roofs">
+          <button class="note-dl" onclick="downloadSectionPDF('roofs','Introduction to Roofs')">Download PDF</button>
+          <h3>Introduction to Roofs</h3>
+          <img src="https://www.livehome3d.com/support/help/ios/en/images/roof.png" alt="Diagram of a roof showing its sides and segments" style="width:100%;max-width:460px;border-radius:10px;margin:10px 0;border:1px solid var(--line);">
+          <p>A roof is its own object type, built inside the app from the outline of the external walls and a style you pick in the Roof Assistant (gable, hip, mansard, and others). A roof has several sides — gables count as sides too — and a side can be made of multiple segments. An AutoRoof automatically covers the entire top of the highest story and reshapes itself if you edit the walls below it; the Pro edition also supports custom roofs with a user-defined area. To add a skylight, simply install a window into the roof.</p>
+          <ol class="note-steps">
+            <li>Open the Roof Assistant and pick a base roof type.</li>
+            <li>Adjust pitch and segments to fine-tune the shape.</li>
+            <li>Drag a material from the library onto the roof in 3D view to change its finish.</li>
+          </ol>
+          <div class="note-tool"><strong>Tip from the docs:</strong> You can reopen the Roof Assistant any time via the roof's context menu → "Change Roof Type."</div>
+          <p><a href="https://www.livehome3d.com/support/help/ios/en/working-with-roofs-introduction-to-roofs" target="_blank" rel="noopener" style="font-weight:700;color:var(--c-notes);">Read the full official guide →</a></p>
+        </div>
+        <div class="note-section" id="materials-notes" data-reading="materials-notes">
+          <button class="note-dl" onclick="downloadSectionPDF('materials-notes','Working with Materials')">Download PDF</button>
+          <h3>Working with Materials</h3>
+          <p>Materials apply color to an object or map a texture onto its surface, and they also control how that surface reflects and scatters light. The built-in material library lives in the Library panel, and you can add your own materials to it. Whatever is currently applied to a selected object shows up in the Object Materials tab of the Inspector. Custom materials can be backed up or exported as a library archive — handy for restoring your library after reinstalling the app, moving to a new device, or sharing a matching material set with a classmate on the same project.</p>
+          <ol class="note-steps">
+            <li>Select a wall, floor, or object and open the Object Materials tab.</li>
+            <li>Drag a material from the Library panel onto the surface.</li>
+            <li>Export a library archive if you want to reuse your custom materials elsewhere.</li>
+          </ol>
+          <div class="note-tool"><strong>Analogy:</strong> Applying a material is like wallpapering — get the scale right or the pattern reads as fake.</div>
+          <p><a href="https://www.livehome3d.com/support/help/ios/en/working-with-materials-introduction" target="_blank" rel="noopener" style="font-weight:700;color:var(--c-notes);">Read the full official guide →</a></p>
+        </div>
+        <div class="note-section" id="lighting-notes" data-reading="lighting-notes">
+          <button class="note-dl" onclick="downloadSectionPDF('lighting-notes','Lighting — Light Sources')">Download PDF</button>
+          <h3>Lighting — Light Sources</h3>
+          <p>To make a 3D scene look realistic, the app lets you add and adjust light sources, and it can simulate light from the sun and moon as well as lamps and fire. Turning on reflections and shadows (the bulb icon in the 3D toolbar) makes a huge visual difference, at the cost of some rendering performance — the more light sources in a project, the longer a scene takes to render.</p>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:10px 0;">
+            <div><img src="https://www.livehome3d.com/support/help/ios/en/images/light_shadow_off.png" alt="3D view without lights and shadows enabled" style="width:100%;border-radius:10px;border:1px solid var(--line);"><div style="font-size:11.5px;color:var(--muted);text-align:center;margin-top:4px;">Without lights &amp; shadows</div></div>
+            <div><img src="https://www.livehome3d.com/support/help/ios/en/images/light_shadow_on.png" alt="3D view with lights and shadows enabled, a realistic rendered look" style="width:100%;border-radius:10px;border:1px solid var(--line);"><div style="font-size:11.5px;color:var(--muted);text-align:center;margin-top:4px;">With lights &amp; shadows</div></div>
+          </div>
+          <ol class="note-steps">
+            <li>Set the sun/moon position using real geolocation, date, and time in the daylight settings.</li>
+            <li>Drag a lamp into your project from the Lamps section of the object library.</li>
+            <li>Adjust luminosity and color per light source in the Light Properties tab of the Inspector.</li>
+          </ol>
+          <div class="note-tip"><strong>Tip:</strong> If the 3D view starts to lag, switch off a few individual lamps in the Inspector rather than all lighting at once.</div>
+          <p><a href="https://www.livehome3d.com/support/help/ios/en/lighting-light-sources" target="_blank" rel="noopener" style="font-weight:700;color:var(--c-notes);">Read the full official guide →</a></p>
+        </div>
+        <div class="note-section" id="cameras" data-reading="cameras">
+          <button class="note-dl" onclick="downloadSectionPDF('cameras','Cameras, Screenshots & Renders')">Download PDF</button>
+          <h3>Cameras, Screenshots &amp; Renders</h3>
+          <p>A camera stores a location and view direction in 3D space, and the same set of cameras defines the views used for 3D renderings. Every project starts with five predefined cameras (front, back, two sides, and top) that can't be renamed, removed, or repositioned. You can add and adjust custom cameras of your own. A movie camera is different — it's a point along a movie track, a path you virtually travel while shooting a walkthrough video. Whichever camera is currently driving the 3D view is called the "active camera," and its position is shown on the floor plan as a frustum (a triangle showing direction and field of view).</p>
+          <img src="https://www.livehome3d.com/support/help/ios/en/images/camera_frustum.png" alt="A camera's frustum shown on the 2D floor plan, indicating its position and view direction" style="width:100%;max-width:420px;border-radius:10px;margin:10px 0;border:1px solid var(--line);">
+          <ol class="note-steps">
+            <li>Select a camera in the Inspector, Project Tree, or floor plan to make it the active camera.</li>
+            <li>Adjust its position or angle, then use it to generate a screenshot or high-resolution render.</li>
+            <li>Set up a movie track if you want a moving walkthrough instead of a still render.</li>
+          </ol>
+          <div class="note-visual"><strong>Sample render:</strong> The "with lights &amp; shadows" image above the Lighting section is itself an example of the kind of finished render your Week 4 milestone and Week 16 capstone renders should aim for.</div>
+          <p><a href="https://www.livehome3d.com/support/help/ios/en/creating-screenshots-and-videos-introduction" target="_blank" rel="noopener" style="font-weight:700;color:var(--c-notes);">Read the full official guide →</a></p>
+        </div>
+        <div class="note-section" id="advanced-roofs-forms" data-reading="advanced-roofs-forms">
+          <button class="note-dl" onclick="downloadSectionPDF('advanced-roofs-forms','Advanced Roofs & House Forms (Weeks 5–6)')">Download PDF</button>
+          <h3>Advanced Roofs &amp; House Forms (Weeks 5–6)</h3>
+          <p>Once you're comfortable with AutoRoof, the next step is editing a roof's contour points directly to build shapes the assistant can't generate on its own — everything from an extra gable to an irregular, site-specific silhouette. Dormers extend that idea at a smaller scale, letting you cut usable, lit space out of an attic. The same "shell first" discipline applies to unusual house forms: an A-frame is a roof pretending to be walls, and a split-level or basement garage is really a Level-height problem before it's anything else.</p>
+          <ol class="note-steps">
+            <li>Open a roof's context menu and look for contour or point-editing options.</li>
+            <li>Add a dormer once the base roof shape is finalized, not before.</li>
+            <li>For A-frames and split-levels, sketch your Level heights on paper before touching the app.</li>
+          </ol>
+          <div class="note-tip"><strong>Tip:</strong> Custom roof edits are easy to get wrong — keep a saved backup of the AutoRoof version before you start hand-editing.</div>
+        </div>
+        <div class="note-section" id="outdoor-terrain" data-reading="outdoor-terrain">
+          <button class="note-dl" onclick="downloadSectionPDF('outdoor-terrain','Outdoor Spaces & Terrain (Weeks 7–8)')">Download PDF</button>
+          <h3>Outdoor Spaces &amp; Terrain (Weeks 7–8)</h3>
+          <p>Balconies, porches, decks, and outdoor kitchens all use the same wall, room, and object tools you already know — the difference is weatherproof materials and an eye for how the space connects back to the interior. Terrain tools work at a larger scale: elevation points let you raise or lower the ground itself, and contour lines help you check the resulting slope at a glance. A courtyard sits between the two ideas — an exterior "room" carved out of the building's own footprint.</p>
+          <ol class="note-steps">
+            <li>Rough out your terrain slope before finalizing an outdoor deck or porch's height.</li>
+            <li>Use contour lines to sanity-check that water would actually drain away from the house.</li>
+            <li>Treat a courtyard's floor and walls with the same material care as any interior room.</li>
+          </ol>
+          <div class="note-tip"><strong>Tip:</strong> Model the terrain around a sloped site before you finalize any outdoor structure's floor height.</div>
+        </div>
+        <div class="note-section" id="modeling-materials" data-reading="modeling-materials">
+          <button class="note-dl" onclick="downloadSectionPDF('modeling-materials','Advanced Modeling & Materials (Weeks 9–10)')">Download PDF</button>
+          <h3>Advanced Modeling &amp; Materials (Weeks 9–10)</h3>
+          <p>Boolean operations — union, subtract, and intersect — are the escape hatch for architectural details the object library doesn't already include: a custom alcove, a chimney chase, an irregular column. Multi-building projects apply the same organizational habits at a larger scale, keeping several structures and a shared site plan inside one file. On the surfacing side, a well-made tiled material depends on correct real-world scale as much as image quality, and a background image is often the fastest way to make an exterior render feel like it belongs to a real place.</p>
+          <ol class="note-steps">
+            <li>Use Boolean subtract to cut an opening a standard door or window tool can't make.</li>
+            <li>Keep each building in a multi-house project named clearly in the Project Tree.</li>
+            <li>Check a new tiled material's scale against a nearby door or person-height object.</li>
+          </ol>
+          <div class="note-tool"><strong>Analogy:</strong> A Boolean operation is like using a cookie cutter — one shape stamps a hole or an addition into another.</div>
+        </div>
+        <div class="note-section" id="workflow-ar-pro" data-reading="workflow-ar-pro">
+          <button class="note-dl" onclick="downloadSectionPDF('workflow-ar-pro','Workflow, AR & Pro Features (Weeks 11–13)')">Download PDF</button>
+          <h3>Workflow, AR &amp; Pro Features (Weeks 11–13)</h3>
+          <p>As projects grow, workflow habits matter as much as modeling skill: trimming polygon count and light sources keeps a scene responsive, and a recent project archive or backup means a crash costs you minutes instead of days. Augmented reality tools flip the direction of that workflow — scanning a real room's point cloud gives you a rough floor plan to refine rather than build from scratch. Live Home 3D Pro and the app's real estate use cases both point toward the same audience: professionals who need construction-ready documentation or a listing render polished enough to market a property.</p>
+          <ol class="note-steps">
+            <li>Profile a slow project by turning off lights one at a time before assuming it's a hardware limit.</li>
+            <li>Save a project archive before any AR scan import, in case the scan needs redoing.</li>
+            <li>Compare a Pro-only feature you're curious about against the free-tier feature list before relying on it.</li>
+          </ol>
+          <div class="note-tip"><strong>Tip:</strong> Treat an AR scan as a first draft floor plan — always verify a couple of key dimensions by hand.</div>
+        </div>
+        <div class="note-section" id="capstone-guide" data-reading="capstone-guide">
+          <button class="note-dl" onclick="downloadSectionPDF('capstone-guide','Capstone Project Guide (Weeks 14–16)')">Download PDF</button>
+          <h3>Capstone Project Guide (Weeks 14–16)</h3>
+          <p>Your capstone brings together every skill from the course into one original home design. Start with a short design brief and program — who the house is for and what rooms it needs — before opening the app. Build the shell first, furnish and material it second, then finish with lighting, a final render pass, and a walkthrough video. The last class day is a critique: presenting your design choices clearly and explaining your trade-offs is part of the assignment, not an afterthought.</p>
+          <ol class="note-steps">
+            <li>Write your one-paragraph design brief before Week 14, Day 1.</li>
+            <li>Don't start furnishing until your shell (walls, levels, roof) is finished and saved.</li>
+            <li>Reserve your highest-quality render settings for the very last pass, in Week 15–16.</li>
+            <li>Prepare 2–3 sentences on the reasoning behind your biggest design decision for the final presentation.</li>
+          </ol>
+          <div class="note-tip"><strong>Tip:</strong> Revisit the Read Me sections and screencasts from earlier weeks that match your specific design — you don't need to re-learn everything, just the parts your house actually uses.</div>
+        </div>
+        <div class="coming-soon-block">
+          <h3>More notes coming soon</h3>
+          <p>Additional Read Me sections will be added here if the course is extended further. In the meantime you can browse the complete official help index: <a href="https://www.livehome3d.com/support/help/ios/en/" target="_blank" rel="noopener" style="color:var(--c-notes);font-weight:700;">Live Home 3D Help for iOS &amp; iPadOS →</a></p>
+        </div>
+      </section>
+
+      <!-- ========== SCREENCASTS ========== -->
+      <section id="screencasts" class="view">
+        <div class="view-head"><div><h2>Screencasts</h2>
+        <p>Official Live Home 3D video tutorials, grouped by the week they support. Tap a thumbnail to play it right inside its card — no need to leave the page. Watching a video counts toward your progress.</p></div>
+        <a href="https://www.livehome3d.com/ios/tutorials" target="_blank" rel="noopener" class="hbtn ghost" style="background:var(--c-screen);color:#fff;">Browse full tutorial library →</a></div>
+        <div id="screencastGroups"></div>
+      </section>
+
+      <!-- ========== PRACTICE FILES ========== -->
+      <section id="practice" class="view">
+        <div class="view-head"><div><h2>Practice Files</h2>
+        <p>Downloadable reference files for this course. A sample render is available now so you can see the target quality for your renders; per-week starter projects will be added as each week is published.</p></div></div>
+        <div class="group-label">Reference Files</div>
+        <div class="media-grid" id="practiceGridReal"></div>
+        <div class="group-label">Weekly Starter Files</div>
+        <div class="media-grid" id="practiceGrid"></div>
+      </section>
+
+      <!-- ========== ADDITIONAL MATERIALS ========== -->
+      <section id="materials" class="view">
+        <div class="view-head"><div><h2>Additional Materials</h2>
+        <p>Extra resources for this course will be added here.</p></div></div>
+        <div class="note-section" style="text-align:center;padding:50px 24px;">
+          <h3 style="margin-top:0;">Coming soon</h3>
+          <p style="color:var(--muted);max-width:480px;margin:0 auto;">This section is a placeholder — your instructor will add extra readings, sample projects, texture packs, or reference files here. Check back soon, or reach out with questions: <a href="mailto:thomas@hmacademy.org" style="color:var(--c-notes);font-weight:700;">thomas@hmacademy.org</a>.</p>
+        </div>
+      </section>
+
+      <!-- ========== MY PROGRESS ========== -->
+      <section id="progress" class="view">
+        <div class="view-head"><div><h2>My Progress</h2>
+        <p>Everything tracked toward your grade — lessons, week-end quizzes, vocabulary, reading, and videos watched.</p></div></div>
+        <div id="progressBody"></div>
+      </section>
+    </main>
+    <aside class="layers-panel" id="layersPanel">
+      <div class="lp-head"><h3>Layers — Progress</h3></div>
+      <div class="lp-total" id="lpTotalPct">0%<span> complete</span></div>
+      <div class="lp-bar"><i id="lpBar"></i></div>
+      <div id="lpRows"></div>
+      <div class="lp-grade">
+        <span>Overall Grade</span>
+        <b id="lpGradeLetter">—</b>
+        <span id="lpGradeDetail">Sign in to start tracking.</span>
+      </div>
+      <button class="lp-report-btn" id="lpReportBtn">✉ Send Progress Report</button>
+      <button class="lp-signout" id="lpSignOutBtn">Sign out of this device</button>
+      <div class="lp-note">Every lesson card is a "layer." Flip a card in the Curriculum tab to mark that day's lesson complete — this panel fills in as you progress. Finishing both days in a week automatically pops up that week's check-in quiz.</div>
+    </aside>
+  </div>
+  <footer class="appfoot">
+    Live 3D Home — 16-Week Studio
+    <div class="foot-contact">✉ <a href="mailto:thomas@hmacademy.org">thomas@hmacademy.org</a></div>
+  </footer>
+</div>
+<script>
+/* ================= TAB NAVIGATION ================= */
+function goTab(name){
+  document.querySelectorAll('.tab').forEach(t=>{
+    const active = t.dataset.tab===name;
+    t.classList.toggle('active', active);
+    t.setAttribute('aria-selected', active ? 'true':'false');
+  });
+  const progBtn = document.getElementById('progressNavBtn');
+  if(progBtn) progBtn.classList.toggle('active', name==='progress');
+  document.querySelectorAll('.view').forEach(v=>v.classList.toggle('active', v.id===name));
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+document.getElementById('mainTabs').addEventListener('click', e=>{
+  const btn = e.target.closest('.tab');
+  if(!btn) return;
+  goTab(btn.dataset.tab);
+});
+document.getElementById('brandHomeBtn').addEventListener('click', ()=>goTab('home'));
+document.getElementById('progressNavBtn').addEventListener('click', ()=>goTab('progress'));
+/* Week pill nav */
+const TOTAL_WEEKS = 16;
+function buildWeekNav(){
+  const nav = document.getElementById('weekNav');
+  nav.innerHTML = '';
+  for(let w=1; w<=TOTAL_WEEKS; w++){
+    const b = document.createElement('button');
+    b.className = 'week-pill';
+    b.type = 'button';
+    b.textContent = 'Week ' + w;
+    b.onclick = () => document.getElementById('week'+w).scrollIntoView({behavior:'smooth', block:'start'});
+    nav.appendChild(b);
+  }
+}
+buildWeekNav();
+/* ================= PROGRESS / FLIP CARDS / LAYERS PANEL ================= */
+const weekMeta = {
+  1:'Getting Started with Live 3D Home', 2:'Building the Structure',
+  3:'Interior Design & Furnishing', 4:'Lighting, Rendering & First Milestone',
+  5:'Advanced Roofs', 6:'Advanced House Forms',
+  7:'Outdoor Living Spaces', 8:'Site & Terrain',
+  9:'Advanced Modeling Techniques', 10:'Materials Mastery',
+  11:'Performance & Workflow', 12:'AR & 3D Navigation Mastery',
+  13:'Pro Workflows & Real Estate', 14:'Capstone: Planning & Shell',
+  15:'Capstone: Development', 16:'Capstone: Presentation & Review'
+};
+const cards = document.querySelectorAll('.flip-card[data-day]');
+let completed = [];
+try{ completed = JSON.parse(localStorage.getItem('completedDays')) || []; }catch(e){ completed = []; }
+function weekDayEls(w){ return document.querySelectorAll('.flip-card[data-day^="'+w+'-"]'); }
+function isWeekComplete(w){
+  const dayEls = weekDayEls(w);
+  if(!dayEls.length) return false;
+  return Array.from(dayEls).every(c => completed.includes(c.dataset.day));
+}
+function buildLayersPanel(){
+  const rows = document.getElementById('lpRows');
+  rows.innerHTML = '';
+  for(let w=1; w<=TOTAL_WEEKS; w++){
+    const dayEls = weekDayEls(w);
+    const total = dayEls.length;
+    const done = Array.from(dayEls).filter(c => completed.includes(c.dataset.day)).length;
+    const pct = total ? Math.round((done/total)*100) : 0;
+    const row = document.createElement('div');
+    row.className = 'lp-row';
+    row.setAttribute('role','button');
+    row.setAttribute('tabindex','0');
+    row.setAttribute('aria-label', `Week ${w}: ${weekMeta[w]}, ${pct}% complete`);
+    row.innerHTML = `<span class="lp-eye" aria-hidden="true">${pct===100?'●':'○'}</span>
+      <span class="lp-thumb"><i style="height:${pct}%"></i></span>
+      <span class="lp-label"><b>Week ${w}</b><small>${weekMeta[w]}</small></span>
+      <span class="lp-pct">${pct}%</span>`;
+    const jump = () => {
+      goTab('curriculum');
+      setTimeout(()=>document.getElementById('week'+w).scrollIntoView({behavior:'smooth',block:'start'}), 80);
+    };
+    row.onclick = jump;
+    row.onkeydown = (e)=>{ if(e.key==='Enter' || e.key===' '){ e.preventDefault(); jump(); } };
+    rows.appendChild(row);
+  }
+}
+function updateProgress(){
+  const total = cards.length;
+  const pct = total ? Math.round((completed.length/total)*100) : 0;
+  document.getElementById('lpBar').style.width = pct+'%';
+  document.getElementById('lpTotalPct').innerHTML = pct+'%<span> complete</span>';
+  try{ localStorage.setItem('completedDays', JSON.stringify(completed)); }catch(e){}
+  buildLayersPanel();
+}
+function toggleCardDone(card){
+  const day = card.dataset.day;
+  if(!completed.includes(day)){
+    completed.push(day);
+    card.classList.add('done');
+    const week = day.split('-')[0];
+    const wasComplete = isWeekComplete(week);
+    updateProgress();
+    if(wasComplete) maybeShowWeekQuiz(week);
+  }
+}
+cards.forEach(card=>{
+  if(completed.includes(card.dataset.day)) card.classList.add('done');
+  card.setAttribute('role','button');
+  card.setAttribute('tabindex','0');
+  card.setAttribute('aria-label','Lesson card, tap to flip and mark complete');
+  card.addEventListener('click', ()=>{
+    card.classList.toggle('flipped');
+    toggleCardDone(card);
+  });
+  card.addEventListener('keydown', e=>{
+    if(e.key==='Enter' || e.key===' '){
+      e.preventDefault();
+      card.classList.toggle('flipped');
+      toggleCardDone(card);
+    }
+  });
+});
+const cardObserver = new IntersectionObserver(entries=>{
+  entries.forEach(e=>{ if(e.isIntersecting) e.target.classList.add('visible'); });
+},{threshold:0.15});
+cards.forEach(c=>cardObserver.observe(c));
+updateProgress();
+document.getElementById('lpToggle').addEventListener('click', function(){
+  const panel = document.getElementById('layersPanel');
+  const collapsed = panel.classList.toggle('collapsed');
+  this.setAttribute('aria-expanded', collapsed ? 'false':'true');
+});
+/* ================= NOTES: DOWNLOAD SECTION AS PDF + READING TRACKING ================= */
+const TOTAL_READING_SECTIONS = 12;
+function downloadSectionPDF(sectionId, topic){
+  const section = document.getElementById(sectionId);
+  const printWindow = window.open('', '', 'width=800,height=900');
+  if(!printWindow){ alert('Your browser blocked the print window. Please allow pop-ups for this site and try again.'); return; }
+  const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  printWindow.document.write(`<!DOCTYPE html><html><head><title>${esc(topic)} - Live 3D Home</title><style>body{font-family:Poppins,sans-serif;margin:40px;line-height:1.6;}h1{color:#1e3a8a;}footer{text-align:center;font-size:0.8rem;opacity:0.6;} .watermark{position:fixed;bottom:20px;right:20px;opacity:0.2;font-size:2rem;color:#1e3a8a;}</style></head><body>`);
+  printWindow.document.write(`<h1>${esc(topic)}</h1>`);
+  printWindow.document.write(section.innerHTML);
+  printWindow.document.write('<div class="watermark">LIVE 3D HOME</div><footer>Live 3D Home — 16-Week Studio</footer></body></html>');
+  printWindow.document.close();
+  printWindow.focus();
+  printWindow.print();
+}
+const readingSeen = new Set();
+const noteObserver = new IntersectionObserver(entries=>{
+  entries.forEach(e=>{
+    if(e.isIntersecting){
+      const key = e.target.dataset.reading;
+      if(key && !readingSeen.has(key)){
+        setTimeout(()=>{
+          const rect = e.target.getBoundingClientRect();
+          if(rect.top < window.innerHeight && rect.bottom > 0){
+            readingSeen.add(key);
+            if(student){ student.readingSeen = Array.from(readingSeen); saveStudentRecord(student); updateGrade(); }
+          }
+        }, 2000);
+      }
+    }
+  });
+},{threshold:0.5});
+document.querySelectorAll('.note-section[data-reading]').forEach(n=>noteObserver.observe(n));
+/* =====================================================================
+   SIGN-IN + DEVICE LOCK + WEEK-END QUIZ + GRADING + PROGRESS REPORT
+   NOTE ON LIMITS:
+   - "Device lock" uses localStorage in THIS browser only — clearing
+     site data or a private window resets it. Real enforcement needs a backend.
+   - "Send Progress Report" opens a pre-filled email draft in the
+     student's own mail app (mailto:) addressed to REPORT_EMAIL below.
+     Replace REPORT_EMAIL with your real instructor address.
+   ===================================================================== */
+const REPORT_EMAIL = 'thomas@hmacademy.org';
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const gate = document.getElementById('signInGate');
+const siError = document.getElementById('siError');
+function siShowError(msg){ siError.textContent = msg; siError.classList.add('show'); }
+function siClearError(){ siError.classList.remove('show'); siError.textContent=''; }
+function getDeviceLock(){
+  try{ return JSON.parse(localStorage.getItem('l3d_device_lock')||'null'); }catch(e){ return null; }
+}
+function getCurrentStudent(){
+  try{ return JSON.parse(localStorage.getItem('l3d_current_student')||'null'); }catch(e){ return null; }
+}
+function setCurrentStudent(s){ localStorage.setItem('l3d_current_student', JSON.stringify(s)); }
+function studentKey(email){ return 'l3d_student_' + email.trim().toLowerCase(); }
+function loadStudentRecord(email){
+  try{
+    const raw = localStorage.getItem(studentKey(email));
+    if(raw){
+      const rec = JSON.parse(raw);
+      rec.weekQuizzes = rec.weekQuizzes || {};
+      rec.readingSeen = rec.readingSeen || [];
+      rec.vocabSeen = rec.vocabSeen || {};
+      rec.seenScreencasts = rec.seenScreencasts || [];
+      return rec;
+    }
+  }catch(e){}
+  return { name:'', email:email.trim().toLowerCase(), completed:[], weekQuizzes:{}, readingSeen:[], vocabSeen:{}, seenScreencasts:[], signedInAt:new Date().toISOString() };
+}
+function saveStudentRecord(rec){ try{ localStorage.setItem(studentKey(rec.email), JSON.stringify(rec)); }catch(e){ console.error(e); } }
+let student = null;
+function attemptSignIn(){
+  siClearError();
+  const name = document.getElementById('siName').value.trim();
+  const email = document.getElementById('siEmail').value.trim().toLowerCase();
+  if(!name || !email || !EMAIL_RE.test(email)){
+    siShowError('Please enter your full name and a valid email address.');
+    return;
+  }
+  const lock = getDeviceLock();
+  if(lock && lock.email !== email){
+    siShowError(`This device is already enrolled to ${lock.email}. It can't be used to sign in or enroll with a different email. If this is a mistake, ask your instructor to reset this device.`);
+    return;
+  }
+  if(!lock){
+    localStorage.setItem('l3d_device_lock', JSON.stringify({ email, name, ts:new Date().toISOString() }));
+  }
+  student = loadStudentRecord(email);
+  student.name = name;
+  saveStudentRecord(student);
+  setCurrentStudent({ name, email });
+  enterApp();
+}
+document.getElementById('siForm').addEventListener('submit', e=>{ e.preventDefault(); attemptSignIn(); });
+document.getElementById('lpSignOutBtn').addEventListener('click', ()=>{
+  if(!confirm('Sign out? Your progress stays saved on this device for your account, but you\'ll need to sign back in with the same email.')) return;
+  localStorage.removeItem('l3d_current_student');
+  location.reload();
+});
+if(new URLSearchParams(location.search).get('resetdevice') === '1'){
+  localStorage.removeItem('l3d_device_lock');
+}
+function enterApp(){
+  gate.classList.add('hidden');
+  document.getElementById('studentBadge').style.display = 'flex';
+  document.getElementById('sbName').textContent = student.name;
+  let legacy = [];
+  try{ legacy = JSON.parse(localStorage.getItem('completedDays')) || []; }catch(e){}
+  legacy.forEach(d=>{ if(!student.completed.includes(d)) student.completed.push(d); });
+  completed = student.completed;
+  cards.forEach(card=>{ card.classList.toggle('done', completed.includes(card.dataset.day)); });
+  (student.readingSeen||[]).forEach(k=>readingSeen.add(k));
+  updateProgress();
+  updateGrade();
+}
+(function initAuth(){
+  const cur = getCurrentStudent();
+  if(cur){
+    student = loadStudentRecord(cur.email);
+    student.name = cur.name;
+    enterApp();
+    return;
+  }
+  const lock = getDeviceLock();
+  if(lock){
+    const nameField = document.getElementById('siName');
+    const emailField = document.getElementById('siEmail');
+    if(nameField) nameField.value = lock.name || '';
+    if(emailField) emailField.value = lock.email || '';
+    const heading = document.getElementById('siHeading');
+    if(heading) heading.textContent = 'Welcome back';
+    const gateP = document.querySelector('.si-card p');
+    if(gateP) gateP.textContent = `Confirm your details to pick up right where you left off, ${lock.name||'there'}.`;
+  }
+})();
+const _origUpdateProgress = updateProgress;
+updateProgress = function(){
+  _origUpdateProgress();
+  if(student){
+    student.completed = completed;
+    saveStudentRecord(student);
+    updateGrade();
+  }
+};
+/* ---------- VOCAB CHECK TRACKING (per week) ---------- */
+const vocabPool = [];
+document.querySelectorAll('.flip-card[data-day] .vocab').forEach(v=>{
+  const card = v.closest('.flip-card[data-day]');
+  const week = card ? card.dataset.day.split('-')[0] : null;
+  if(!week) return;
+  vocabPool.push({ term: v.textContent.trim(), def: v.getAttribute('data-def')||'', week });
+  const mark = ()=>{
+    if(!student) return;
+    student.vocabSeen[week] = student.vocabSeen[week] || [];
+    const term = v.textContent.trim();
+    if(!student.vocabSeen[week].includes(term)){
+      student.vocabSeen[week].push(term);
+      saveStudentRecord(student);
+      updateGrade();
+    }
+  };
+  v.addEventListener('mouseenter', mark);
+  v.addEventListener('focus', mark);
+  v.addEventListener('click', mark);
+});
+/* ---------- WEEK-END QUIZ ---------- */
+function buildWeekQuiz(week){
+  const pool = vocabPool.filter(v=>v.week===week);
+  if(pool.length < 2) return [];
+  const shuffled = pool.slice().sort(()=>Math.random()-0.5).slice(0,3);
+  return shuffled.map(item=>{
+    const distractorPool = vocabPool.filter(v=>v.def && v.def!==item.def);
+    const distractors = distractorPool.sort(()=>Math.random()-0.5).slice(0,3).map(d=>d.def);
+    const options = [item.def, ...distractors].sort(()=>Math.random()-0.5);
+    return { term:item.term, correct:item.def, options };
+  });
+}
+function maybeShowWeekQuiz(week){
+  if(!student) return;
+  if(student.weekQuizzes[week]) return;
+  const quiz = buildWeekQuiz(week);
+  const modal = document.getElementById('wqModal');
+  const body = document.getElementById('wqQuizBody');
+  const answerLabel = document.getElementById('wqAnswerLabel');
+  const answerBox = document.getElementById('wqAnswer');
+  const skipBtn = document.getElementById('wqSkip');
+  document.getElementById('wqWeekTag').textContent = `Week ${week} Check-In — ${weekMeta[week]||''}`;
+  document.getElementById('wqQuestion').textContent = quiz.length
+    ? `Nice work finishing Week ${week}! Quick vocabulary check before you move on:`
+    : `Nice work finishing Week ${week}! Tell your instructor how it went:`;
+  body.innerHTML = '';
+  if(quiz.length){
+    quiz.forEach((q,i)=>{
+      const wrap = document.createElement('div');
+      wrap.style.marginBottom = '12px';
+      wrap.innerHTML = `<div style="font-size:13px;font-weight:700;margin-bottom:6px;">${i+1}. What does "${q.term}" mean?</div>` +
+        q.options.map((opt,oi)=>`<label style="display:block;font-size:13px;margin:4px 0;cursor:pointer;">
+          <input type="radio" name="wqq${i}" value="${oi}" data-correct="${opt===q.correct?'1':'0'}"> ${opt}
+        </label>`).join('');
+      body.appendChild(wrap);
+    });
+    answerLabel.textContent = 'Anything else you want your instructor to know? (optional)';
+  } else {
+    answerLabel.textContent = 'Your answer';
+  }
+  answerBox.value = '';
+  skipBtn.style.display = quiz.length ? 'none' : '';
+  modal.dataset.week = week;
+  modal.dataset.hasQuiz = quiz.length ? '1' : '0';
+  modal.classList.add('open');
+  (quiz.length ? body.querySelector('input') : answerBox)?.focus();
+}
+document.getElementById('wqSkip').addEventListener('click', ()=>{
+  document.getElementById('wqModal').classList.remove('open');
+});
+document.getElementById('wqSubmit').addEventListener('click', ()=>{
+  if(!student) return;
+  const modal = document.getElementById('wqModal');
+  const week = modal.dataset.week;
+  const hasQuiz = modal.dataset.hasQuiz === '1';
+  let score = 0, total = 0;
+  if(hasQuiz){
+    const groups = {};
+    document.querySelectorAll('#wqQuizBody input[type=radio]').forEach(r=>{ groups[r.name] = groups[r.name]||[]; groups[r.name].push(r); });
+    const names = Object.keys(groups);
+    total = names.length;
+    for(const name of names){
+      const checked = groups[name].find(r=>r.checked);
+      if(!checked){ alert('Please answer every question before submitting.'); return; }
+      if(checked.dataset.correct === '1') score++;
+    }
+  }
+  const reflection = document.getElementById('wqAnswer').value.trim();
+  document.querySelectorAll('#wqQuizBody input').forEach(i=>i.disabled=true);
+  document.getElementById('wqAnswer').disabled = true;
+  document.getElementById('wqSubmit').disabled = true;
+  student.weekQuizzes[week] = { score, total, reflection, completedAt:new Date().toISOString() };
+  saveStudentRecord(student);
+  updateGrade();
+  setTimeout(()=>{
+    modal.classList.remove('open');
+    document.querySelectorAll('#wqQuizBody input').forEach(i=>i.disabled=false);
+    document.getElementById('wqAnswer').disabled = false;
+    document.getElementById('wqSubmit').disabled = false;
+  }, 700);
+});
+document.getElementById('wqModal').addEventListener('keydown', e=>{
+  if(e.key==='Escape' && document.getElementById('wqSkip').style.display!=='none') document.getElementById('wqSkip').click();
+});
+/* ---------- GRADING ---------- */
+function computeGrade(){
+  if(!student) return { pct:0, letter:'—', detail:'Sign in to start tracking.' };
+  const totalLessons = cards.length;
+  const completionPct = totalLessons ? (student.completed.length/totalLessons)*100 : 0;
+  const quizzesTaken = Object.keys(student.weekQuizzes).length;
+  const quizPctSum = Object.values(student.weekQuizzes).reduce((s,q)=> s + (q.total ? (q.score/q.total)*100 : 100), 0);
+  const quizAvg = quizzesTaken ? quizPctSum/quizzesTaken : 0;
+  const readingPct = Math.min(100, ((student.readingSeen||[]).length/TOTAL_READING_SECTIONS)*100);
+  const totalVocabTerms = vocabPool.length;
+  const vocabSeenCount = Object.values(student.vocabSeen||{}).reduce((s,arr)=>s+arr.length,0);
+  const vocabPct = totalVocabTerms ? Math.min(100,(vocabSeenCount/totalVocabTerms)*100) : 0;
+  const videoPct = TOTAL_VIDEOS ? Math.min(100, ((student.seenScreencasts||[]).length/TOTAL_VIDEOS)*100) : 0;
+  const overall = completionPct*0.30 + quizAvg*0.20 + readingPct*0.15 + vocabPct*0.15 + videoPct*0.20;
+  let letter = 'F';
+  if(overall>=90) letter='A'; else if(overall>=80) letter='B'; else if(overall>=70) letter='C'; else if(overall>=60) letter='D';
+  return { pct: Math.round(overall), letter, detail:`${Math.round(completionPct)}% lessons · ${quizzesTaken}/${TOTAL_WEEKS} quizzes · ${Math.round(videoPct)}% videos`,
+    completionPct, quizAvg, readingPct, vocabPct, videoPct, quizzesTaken, totalVocabTerms, vocabSeenCount };
+}
+function updateGrade(){
+  const g = computeGrade();
+  const letterEl = document.getElementById('lpGradeLetter');
+  const detailEl = document.getElementById('lpGradeDetail');
+  if(letterEl){ letterEl.textContent = student ? `${g.letter}  (${g.pct}%)` : '—'; }
+  if(detailEl){ detailEl.textContent = g.detail; }
+  const sbGrade = document.getElementById('sbGrade');
+  if(sbGrade) sbGrade.textContent = student ? `${g.letter} · ${g.pct}%` : '—';
+  renderProgressView();
+}
+function weekStatus(w){
+  const dayEls = weekDayEls(w);
+  const total = dayEls.length;
+  const done = student ? Array.from(dayEls).filter(c=>student.completed.includes(c.dataset.day)).length : 0;
+  return { total, done, pct: total ? Math.round((done/total)*100) : 0 };
+}
+function renderProgressView(){
+  const body = document.getElementById('progressBody');
+  if(!body) return;
+  if(!student){
+    body.innerHTML = `<div class="progress-signedout"><h3>Sign in to see your progress</h3><p>Once you're signed in, this page tracks your lessons, quizzes, vocabulary, reading, and videos automatically.</p></div>`;
+    return;
+  }
+  const g = computeGrade();
+  let rows = '';
+  for(let w=1; w<=TOTAL_WEEKS; w++){
+    const st = weekStatus(w);
+    const quiz = student.weekQuizzes[w];
+    let badgeClass = 'notstarted', badgeText = 'Not started';
+    if(st.pct===100){ badgeClass='done'; badgeText='Complete'; }
+    else if(st.pct>0){ badgeClass='partial'; badgeText='In progress'; }
+    const quizText = quiz ? (quiz.total ? `${quiz.score}/${quiz.total} correct` : 'Reflection submitted') : '—';
+    rows += `<tr><td>Week ${w}</td><td>${weekMeta[w]||''}</td><td>${st.done}/${st.total} days</td><td><span class="pw-badge ${badgeClass}">${badgeText}</span></td><td>${quizText}</td></tr>`;
+  }
+  body.innerHTML = `
+    <div class="progress-hero">
+      <div class="ph-grade"><b>${g.letter} · ${g.pct}%</b><span>Overall grade</span></div>
+      <div class="ph-bar-wrap"><span style="font-size:12.5px;color:#c9d3f5;">${student.completed.length} of ${cards.length} lessons complete</span>
+        <div class="ph-bar"><i style="width:${cards.length ? Math.round((student.completed.length/cards.length)*100) : 0}%"></i></div>
+      </div>
+    </div>
+    <div class="progress-grid">
+      <div class="progress-card" style="--pc-accent:#2f6fed"><h4>Lessons Completed</h4><div class="pc-big">${student.completed.length}/${cards.length}</div><div class="pc-sub">across ${TOTAL_WEEKS} weeks</div></div>
+      <div class="progress-card" style="--pc-accent:#ff7a2d"><h4>Week Quizzes</h4><div class="pc-big">${g.quizzesTaken}/${TOTAL_WEEKS}</div><div class="pc-sub">auto-triggered at week end</div></div>
+      <div class="progress-card" style="--pc-accent:#8b5cf6"><h4>Reading Opened</h4><div class="pc-big">${(student.readingSeen||[]).length}/${TOTAL_READING_SECTIONS}</div><div class="pc-sub">Read Me sections viewed</div></div>
+      <div class="progress-card" style="--pc-accent:#3f51b5"><h4>Vocabulary Learned</h4><div class="pc-big">${g.vocabSeenCount}/${g.totalVocabTerms}</div><div class="pc-sub">terms opened or clicked</div></div>
+      <div class="progress-card" style="--pc-accent:#12a394"><h4>Videos Watched</h4><div class="pc-big">${(student.seenScreencasts||[]).length}/${TOTAL_VIDEOS}</div><div class="pc-sub">screencasts played</div></div>
+    </div>
+    <div class="note-section" style="margin-top:22px;">
+      <h3 style="margin-top:0;">Week-by-week breakdown</h3>
+      <div style="overflow-x:auto;"><table class="progress-week-table">
+        <thead><tr><th>Week</th><th>Topic</th><th>Days done</th><th>Status</th><th>Quiz</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table></div>
+    </div>
+  `;
+}
+/* ---------- PROGRESS REPORT → EMAIL ---------- */
+function buildReportBody(trigger){
+  const g = computeGrade();
+  const lines = [];
+  lines.push(`Progress report for ${student.name} (${student.email})`);
+  if(trigger) lines.push(`Trigger: ${trigger}`);
+  lines.push(`Overall grade: ${g.letter} (${g.pct}%)`);
+  lines.push(`Lessons completed: ${student.completed.length} of ${cards.length}`);
+  lines.push(`Vocabulary learned: ${g.vocabSeenCount} of ${g.totalVocabTerms}`);
+  lines.push(`Videos watched: ${(student.seenScreencasts||[]).length} of ${TOTAL_VIDEOS}`);
+  lines.push('');
+  lines.push('Week-end quizzes:');
+  const wkKeys = Object.keys(student.weekQuizzes).sort((a,b)=>Number(a)-Number(b));
+  if(wkKeys.length===0){ lines.push('  (none completed yet)'); }
+  wkKeys.forEach(wk=>{
+    const q = student.weekQuizzes[wk];
+    lines.push(`  Week ${wk}: ${q.total ? `${q.score}/${q.total} vocabulary correct` : 'reflection only'}${q.reflection ? ' — "'+q.reflection.replace(/\s+/g,' ').slice(0,200)+'"' : ''}`);
+  });
+  lines.push('');
+  lines.push('Reading material opened:');
+  lines.push(`  ${(student.readingSeen||[]).length} of ${TOTAL_READING_SECTIONS} sections — ${(student.readingSeen||[]).join(', ')||'none yet'}`);
+  return lines.join('\n');
+}
+function sendReport(trigger){
+  if(!student) return;
+  const subject = encodeURIComponent(`Progress Report — ${student.name} (${student.email})`);
+  const body = encodeURIComponent(buildReportBody(trigger));
+  window.location.href = `mailto:${REPORT_EMAIL}?subject=${subject}&body=${body}`;
+}
+document.getElementById('lpReportBtn').addEventListener('click', ()=>{
+  if(!student){ alert('Sign in first.'); return; }
+  sendReport('Manual send from Layers panel');
+});
+/* ================= SCREENCASTS: REAL OFFICIAL TUTORIALS (livehome3d.com/ios/tutorials) ================= */
+function renderVideoCard({ id, label }){
+  const card = document.createElement('div');
+  card.className = 'media-card video-card';
+  card.style.setProperty('--card-accent', '#12a394');
+  card.innerHTML = `
+    <div class="media-thumb">
+      <button type="button" class="thumb-poster" aria-label="Play: ${label}">
+        <img class="thumb-preview" src="https://img.youtube.com/vi/${id}/hqdefault.jpg" alt="" loading="lazy">
+        <div class="play-badge" aria-hidden="true">▶</div>
+      </button>
+    </div>
+    <div class="video-body">
+      <b>${label}</b>
+      <a href="https://www.youtube.com/watch?v=${id}" target="_blank" rel="noopener">Watch on YouTube ↗</a>
+    </div>`;
+  const thumb = card.querySelector('.media-thumb');
+  const poster = card.querySelector('.thumb-poster');
+  poster.addEventListener('click', ()=>{
+    const iframe = document.createElement('iframe');
+    iframe.src = `https://www.youtube-nocookie.com/embed/${id}?autoplay=1`;
+    iframe.title = label;
+    iframe.loading = 'lazy';
+    iframe.setAttribute('allow','accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture');
+    iframe.setAttribute('allowfullscreen','true');
+    thumb.innerHTML = '';
+    thumb.appendChild(iframe);
+    if(student){
+      student.seenScreencasts = student.seenScreencasts || [];
+      if(!student.seenScreencasts.includes(id)){ student.seenScreencasts.push(id); saveStudentRecord(student); updateGrade(); }
+    }
+  }, { once:true });
+  return card;
+}
+const tutorialsByWeek = {
+  1: [ ['Smnn4vJqeMQ','User Interface'], ['pR6C_BXVT6Y','Creating a Floor Plan'], ['sXzcFxy1S5k','Importing Home Plan'] ],
+  2: [ ['LkLong82yKU','Creating Custom Stairs'], ['qmpWpww1ihk','Adding a Roof'], ['_Jdwol4gAhw','Customizing an AutoRoof'], ['WQQRb1lUfvU','Creating a House From Start to Finish'] ],
+  3: [ ['TxbxrXWFbvk','Working With Objects'], ['Z8Owr4Q-w7Q','Applying Materials'], ['h8997t3Noj4','Applying Materials Onto Several Surfaces'], ['rGVytP-rsxk','Creating a Rug'] ],
+  4: [ ['WKeUxYNMASw','Elevation View'], ['voPxnoQ0jwk','Viewing the Home Model in AR'], ['Qj3E8VdsVQ0','Creating Videos'] ],
+  5: [ ['Si7-nrAPAIA','Using Contour Points for Making Roofs'], ['79qx69bonn8','Customizing a Roof'], ['rupGSNlxQ-k','Working With Dormers'] ],
+  6: [ ['rlVq4V849NY','Making A-Frame Houses'], ['_4fjIhQoUlA','Making Split-Level Houses'], ['Mid9uV1QI4Y','Making Basement Garage'] ],
+  7: [ ['wfusIBBgDXQ','Making Balconies and Simple Porches'], ['yxdx_s8pW2Y','Adding a Deck to Your House'], ['967bTTGom84','Making Outdoor Kitchen'] ],
+  8: [ ['gi3AwLUaRG0','Terrain Editing Tools Part 1'], ['hdOjfHaNJgg','Terrain Editing Tools Part 2'], ['xqekoFYLwYw','Creating a Courtyard'] ],
+  9: [ ['MvbLpaYhLTo','Boolean Operations'], ['CvEDKVo9lqc','Creating Multiple Houses in a Project'] ],
+  10: [ ['mL1ZUv14--k','Creating Tiled Materials'], ['TkmwNxEz1l0','Adding a Background Image Outside the Window'] ],
+  11: [ ['26Fht0A2rXc','Speeding Up 3D Performance'], ['sqjRz_Mj3Is','Saving and Transferring the Project'] ],
+  12: [ ['gt-vla_O4UA','Scanning a Room in AR (iOS 16+)'], ['y1Wzaqmhhtw','Mastering Movement and Editing in 3D'] ],
+  13: [ ['sDprFltDiqE','Pro Edition Features'], ['ZDhQUCammZs','Live Home 3D for Real Estate'] ]
+};
+let TOTAL_VIDEOS = 0;
+const screencastGroupsWrap = document.getElementById('screencastGroups');
+for(let w=1; w<=TOTAL_WEEKS; w++){
+  const vids = tutorialsByWeek[w];
+  if(!vids || !vids.length){
+    if(w===14){
+      const note = document.createElement('div');
+      note.className = 'coming-soon-block';
+      note.style.marginTop = '26px';
+      note.innerHTML = `<h3>Weeks 14–16 — Capstone</h3><p>No new screencasts for the capstone weeks — revisit any earlier tutorial that matches your own design, or browse the <a href="https://www.livehome3d.com/ios/tutorials" target="_blank" rel="noopener" style="color:var(--c-screen);font-weight:700;">full tutorial library</a>.</p>`;
+      screencastGroupsWrap.appendChild(note);
+    }
+    continue;
+  }
+  const label = document.createElement('div');
+  label.className = 'group-label';
+  label.textContent = `Week ${w} — ${weekMeta[w]}`;
+  const grid = document.createElement('div');
+  grid.className = 'media-grid';
+  grid.id = 'screencastGridWeek'+w;
+  vids.forEach(([id,lbl])=>{ grid.appendChild(renderVideoCard({id, label:lbl})); TOTAL_VIDEOS++; });
+  screencastGroupsWrap.appendChild(label);
+  screencastGroupsWrap.appendChild(grid);
+}
+
+/* ================= PRACTICE FILES: REAL SAMPLE RENDER + WEEKLY PLACEHOLDERS ================= */
+const realFilesGrid = document.getElementById('practiceGridReal');
+const renderCard = document.createElement('div');
+renderCard.className = 'media-card file-card';
+renderCard.style.setProperty('--card-accent', '#ef476f');
+renderCard.innerHTML = `
+  <div class="mc-icon" aria-hidden="true">⭳</div>
+  <b>Sample Final Render (PNG)</b>
+  <span class="mc-status">available now</span>
+  <p>An official Live Home 3D rendered 3D view — lights and shadows enabled — showing the image quality your milestone and capstone renders should match.</p>
+  <a class="file-dl" href="https://www.livehome3d.com/support/help/ios/en/images/light_shadow_on.png" download target="_blank" rel="noopener">Download sample render ↓</a>`;
+realFilesGrid.appendChild(renderCard);
+
+function renderPlaceholderCard({ label, blurb, accent, icon }){
+  const card = document.createElement('div');
+  card.className = 'media-card';
+  card.style.setProperty('--card-accent', accent);
+  card.innerHTML = `
+    <div class="mc-icon" aria-hidden="true">${icon}</div>
+    <b>${label}</b>
+    <span class="mc-status">coming soon</span>
+    <p>${blurb}</p>`;
+  return card;
+}
+const practiceGrid = document.getElementById('practiceGrid');
+for(let w=1; w<=TOTAL_WEEKS; w++){
+  practiceGrid.appendChild(renderPlaceholderCard({
+    label: `Week ${w} Starter File`,
+    blurb: `A starter or exercise project for Week ${w} — ${weekMeta[w]} — will be uploaded here.`,
+    accent: '#ef476f', icon: '⭳'
+  }));
+}
+renderProgressView();
+</script>
+</body>
+</html>
